@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Starbull | The Next MoonBull</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter', system-ui, sans-serif; }
+    body { background:#090912; color:#ffffff; overflow-x:hidden; }
+    /* 顶部导航 */
+    header { padding:1.2rem 5%; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1f1f2f; position:sticky; top:0; background:#09091280; backdrop-filter:blur(10px); z-index:999; }
+    .logo { font-size:1.5rem; font-weight:800; color:#ffd100; }
+    .nav a { color:#cccccc; margin:0 1rem; text-decoration:none; font-weight:500; transition:color 0.3s; }
+    .nav a:hover, .nav a.active { color:#ffd100; }
+    /* 英雄区 */
+    .hero { padding:6rem 5%; text-align:center; max-width:1200px; margin:0 auto; }
+    .hero h1 { font-size:4.5rem; margin-bottom:1.5rem; background:linear-gradient(90deg, #ffd100, #ff9500); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .hero p { font-size:1.2rem; color:#aaaaaa; max-width:700px; margin:0 auto 3rem; line-height:1.6; }
+    .btn { padding:1rem 2rem; border-radius:12px; font-weight:700; font-size:1rem; cursor:pointer; transition:all 0.3s; border:none; }
+    .btn-primary { background:#ffd100; color:#000000; }
+    .btn-primary:hover { background:#ff9500; transform:translateY(-2px); }
+    .btn-outline { background:transparent; border:1px solid #ffd100; color:#ffd100; margin-left:1rem; }
+    .btn-outline:hover { background:rgba(255, 209, 0, 0.1); transform:translateY(-2px); }
+    /* 预售面板（核心） */
+    .presale-section { padding:4rem 5%; background:#0f0f1a; }
+    .presale-box { max-width:600px; margin:0 auto; background:#171725; padding:2.5rem; border-radius:20px; border:1px solid #2a2a3a; }
+    .presale-box h2 { text-align:center; font-size:2rem; margin-bottom:2rem; color:#ffd100; }
+    /* 预售阶段标签（手动固定） */
+    .presale-stage { text-align:center; background:rgba(255, 209, 0, 0.1); color:#ffd100; padding:0.8rem; border-radius:10px; margin-bottom:1.5rem; font-weight:600; }
+    /* 进度条 */
+    .progress-container { margin:2rem 0; }
+    .progress-meta { display:flex; justify-content:space-between; color:#aaaaaa; margin-bottom:0.8rem; }
+    .progress-bar { width:100%; height:12px; background:#2a2a3a; border-radius:99px; overflow:hidden; }
+    .progress-fill { height:100%; background:linear-gradient(90deg, #ffd100, #ff9500); width:45%; /* 可手动修改预售进度 */ }
+    /* 预售数据 */
+    .presale-stats { display:grid; grid-template-columns:repeat(2, 1fr); gap:1.5rem; margin:2rem 0; }
+    .stat-card { background:#1f1f2f; padding:1.2rem; border-radius:12px; text-align:center; }
+    .stat-card strong { display:block; font-size:1.4rem; color:#ffffff; margin-bottom:0.5rem; }
+    .stat-card span { color:#aaaaaa; font-size:0.9rem; }
+    /* 购买区域（固定价格，非用户可选） */
+    .buy-area { margin:2.5rem 0; }
+    .price-fixed { text-align:center; margin-bottom:1.5rem; font-size:1.1rem; color:#ffd100; font-weight:600; }
+    .wallet-actions { display:flex; flex-direction:column; gap:1rem; }
+    .connect-btn { width:100%; padding:1.2rem; background:#1f1f2f; border:1px solid #ffd100; color:#ffd100; border-radius:12px; font-weight:700; cursor:pointer; transition:0.3s; }
+    .connect-btn:hover { background:rgba(255, 209, 0, 0.1); }
+    .buy-btn { width:100%; padding:1.2rem; background:#ffd100; color:#000; border-radius:12px; font-weight:700; cursor:pointer; transition:0.3s; border:none; }
+    .buy-btn:hover { background:#ff9500; transform:translateY(-2px); }
+    /* 代币信息 */
+    .tokenomics { padding:5rem 5%; max-width:1200px; margin:0 auto; }
+    .tokenomics h3 { font-size:2.2rem; text-align:center; margin-bottom:3rem; color:#ffd100; }
+    .token-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:2rem; }
+    .token-card { background:#171725; padding:2rem; border-radius:16px; text-align:center; border:1px solid #2a2a3a; }
+    .token-card strong { font-size:1.6rem; display:block; margin-bottom:1rem; color:#ffffff; }
+    .token-card span { color:#aaaaaa; line-height:1.5; }
+    /* 锁仓证明链接 */
+    .lock-link { text-align:center; margin-top:1rem; }
+    .lock-link a { color:#ffd100; text-decoration:none; font-weight:600; }
+    .lock-link a:hover { text-decoration:underline; }
+    /* 底部 */
+    footer { padding:3rem 5%; text-align:center; border-top:1px solid #1f1f2f; margin-top:5rem; color:#666666; }
+    footer a { color:#ffd100; text-decoration:none; }
+    /* 响应式适配 */
+    @media (max-width:768px) {
+      .hero h1 { font-size:3rem; }
+      .presale-stats { grid-template-columns:1fr; }
+      .btn { padding:0.8rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+<!-- 顶部导航 -->
+<header>
+  <div class="logo">STARBULL</div>
+  <div class="nav">
+    <a href="#home" class="active">Home</a>
+    <a href="#presale">Presale</a>
+    <a href="#tokenomics">Tokenomics</a>
+    <a href="#social">Social</a>
+    <a href="https://www.dx.app/dxlock/view/liquidity-locker?address=0xaDD700611C2d07b8dE36b95DD442EC1692503Fc4&chain=56" target="_blank">Locked LP</a>
+  </div>
+</header>
+
+<!-- 英雄区 -->
+<section class="hero" id="home">
+  <h1>STARBULL</h1>
+  <p>The Next Generation Meme Coin Inspired by MoonBull. Fair Launch • 0% Tax • Liquidity Locked for 2 Years • Community Driven</p>
+  <div>
+    <button class="btn btn-primary" onclick="location.href='#presale'">Join Presale</button>
+    <button class="btn btn-outline" onclick="location.href='https://pancakeswap.finance/swap?inputCurrency=BNB&outputCurrency=0x36e18dCf2364F25701661C623945e99c6E39E61B'">Trade Now</button>
+  </div>
+</section>
+
+<!-- 预售面板（核心，手动阶段+固定价格） -->
+<section class="presale-section" id="presale">
+  <div class="presale-box">
+    <h2>Starbull Presale</h2>
+    <!-- 手动固定预售阶段 -->
+    <div class="presale-stage">🔥 Presale Stage 1 (Fixed Price) 🔥</div>
+    
+    <!-- 预售进度 -->
+    <div class="progress-container">
+      <div class="progress-meta">
+        <span>Raised: 90 BNB</span>
+        <span>Goal: 200 BNB</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+    </div>
+
+    <!-- 预售核心数据 -->
+    <div class="presale-stats">
+      <div class="stat-card">
+        <strong>1 BNB = 500,000 STARBULL</strong>
+        <span>Fixed Presale Price</span>
+      </div>
+      <div class="stat-card">
+        <strong>2 Days Left</strong>
+        <span>Presale Deadline</span>
+      </div>
+    </div>
+
+    <!-- 固定价格购买区（非用户可选） -->
+    <div class="buy-area">
+      <div class="price-fixed">✅ Fixed Price: 1 BNB = 500,000 $STARBULL (Matches Contract)</div>
+      <div class="wallet-actions">
+        <button class="connect-btn" id="connectWallet">Connect MetaMask Wallet</button>
+        <button class="buy-btn">Buy STARBULL (Stage 1)</button>
+      </div>
+    </div>
+
+    <!-- 收款钱包标注（增强透明） -->
+    <div style="text-align:center; color:#aaaaaa; font-size:0.9rem; margin-top:1rem;">
+      Presale Wallet: <span style="color:#ffd100;">0xA616911194eca5aD6E858a2aCFAC2cDaDC8f04B1</span>
+    </div>
+  </div>
+</section>
+
+<!-- 代币信息 -->
+<section class="tokenomics" id="tokenomics">
+  <h3>Tokenomics</h3>
+  <div class="token-grid">
+    <div class="token-card">
+      <strong>Total Supply</strong>
+      <span>1,000,000,000 $STARBULL</span>
+    </div>
+    <div class="token-card">
+      <strong>Buy Tax</strong>
+      <span>0% (Zero Fees)</span>
+    </div>
+    <div class="token-card">
+      <strong>Sell Tax</strong>
+      <span>0% (Zero Fees)</span>
+    </div>
+    <div class="token-card">
+      <strong>Liquidity</strong>
+      <span>✅ Locked for 2 Years</span>
+      <div class="lock-link">
+        <a href="https://www.dx.app/dxlock/view/liquidity-locker?address=0xaDD700611C2d07b8dE36b95DD442EC1692503Fc4&chain=56" target="_blank">View Lock Proof</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 底部 -->
+<footer id="social">
+  <p>Starbull © 2026 | Contract: <a href="https://bscscan.com/address/0x36e18dCf2364F25701661C623945e99c6E39E61B" target="_blank">0x36e18dCf2364F25701661C623945e99c6E39E61B</a> | Fair Launch • No Team Allocation</p>
+</footer>
+
+<!-- 钱包连接基础JS（适配BSC链） -->
+<script>
+  // 连接MetaMask钱包
+  document.getElementById('connectWallet').addEventListener('click', async () => {
+    if (window.ethereum) {
+      try {
+        // 请求连接钱包
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        // 切换到BSC主网（56）
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x38' }] // 56的16进制
+        });
+        document.getElementById('connectWallet').innerText = 'Wallet Connected ✅';
+      } catch (error) {
+        alert('Please connect to MetaMask and switch to BSC Mainnet!');
+        console.error(error);
+      }
+    } else {
+      alert('MetaMask is not installed! Please install it first.');
+    }
+  });
+
+  // 预售阶段手动切换（你可修改这里的stage值）
+  const currentStage = 1; // 1=Stage1, 2=Stage2
+  const stageTexts = {
+    1: '🔥 Presale Stage 1 (Fixed Price) 🔥',
+    2: '🔥 Presale Stage 2 (Final Round) 🔥'
+  };
+  const stagePrices = {
+    1: '1 BNB = 500,000 STARBULL',
+    2: '1 BNB = 450,000 STARBULL'
+  };
+  // 如需切换阶段，修改currentStage的值即可
+  document.querySelector('.presale-stage').innerText = stageTexts[currentStage];
+  document.querySelector('.stat-card strong').innerText = stagePrices[currentStage];
+</script>
+</body>
+</html>
