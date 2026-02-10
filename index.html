@@ -10,7 +10,6 @@
     <script src="https://cdn.jsdelivr.net/npm/web3modal@1.9.12/dist/index.min.js"></script>
     <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     
     <!-- Icons & Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1723,6 +1722,10 @@
             border-left: 4px solid var(--warning);
         }
         
+        .notification.info {
+            border-left: 4px solid var(--info);
+        }
+        
         .notification-icon {
             font-size: 1.5rem;
         }
@@ -1737,6 +1740,10 @@
         
         .notification.warning .notification-icon {
             color: var(--warning);
+        }
+        
+        .notification.info .notification-icon {
+            color: var(--info);
         }
         
         .notification-content h4 {
@@ -1981,6 +1988,10 @@
 
                     <!-- 钱包连接状态 -->
                     <div class="wallet-section" id="walletSection">
+                        <button class="btn btn-primary w-100" id="connectBtn">
+                            <i class="fas fa-wallet"></i>
+                            <span>Connect Wallet to Purchase</span>
+                        </button>
                         <div class="wallet-status d-none" id="walletStatus">
                             <div class="wallet-address" id="walletAddress">0x0000...0000</div>
                         </div>
@@ -2593,7 +2604,6 @@
             initPurchase();
             initCountdown();
             initAnimations();
-            initContractIntegration();
             initLanguageSystem();
             initCopyButtons();
             
@@ -2602,10 +2612,10 @@
 
         // ===== 全局变量 =====
         let web3;
+        let web3Modal;
         let provider;
         let account;
         let chainId;
-        let contract;
         let currentStage = 11; // 默认当前阶段
         let presaleData = {
             totalRaised: 422.5, // BNB
@@ -2682,6 +2692,18 @@
                 });
             });
 
+            // 语言切换
+            langOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    const lang = option.getAttribute('data-lang');
+                    langOptions.forEach(opt => opt.classList.remove('active'));
+                    option.classList.add('active');
+                    langBtn.querySelector('span').textContent = lang.toUpperCase();
+                    // 这里可以添加语言切换逻辑
+                    console.log(`Language changed to ${lang}`);
+                });
+            });
+
             // 滚动监听
             window.addEventListener('scroll', highlightNavOnScroll);
             highlightNavOnScroll(); // 初始调用
@@ -2690,41 +2712,49 @@
         // ===== 钱包连接功能 =====
         function initWallet() {
             const connectWalletBtn = document.getElementById('connectWalletBtn');
+            const connectBtn = document.getElementById('connectBtn');
             const walletModal = document.getElementById('walletModal');
             const closeWalletModal = document.getElementById('closeWalletModal');
             const walletOptions = document.querySelectorAll('[data-wallet]');
             const buyBtn = document.getElementById('buyBtn');
             const termsCheckbox = document.getElementById('termsCheckbox');
 
-            // Web3Modal 配置
-            const providerOptions = {
-                walletconnect: {
-                    package: window.WalletConnectProvider.default,
-                    options: {
-                        rpc: {
-                            56: "https://bsc-dataseed.binance.org/",
-                            97: "https://data-seed-prebsc-1-s1.binance.org:8545/"
-                        },
-                        chainId: 56
-                    }
-                }
-            };
-
-            const web3Modal = new window.Web3Modal.default({
-                network: "binance", // 主网
-                cacheProvider: true,
-                providerOptions,
-                theme: {
-                    background: "rgba(5, 5, 5, 0.9)",
-                    main: "rgb(255, 140, 0)",
-                    secondary: "rgb(255, 215, 0)",
-                    border: "rgb(51, 51, 51)",
-                    hover: "rgb(255, 165, 0)"
-                }
-            });
-
             // 钱包连接状态
             let isConnected = false;
+
+            // 初始化Web3Modal
+            function initWeb3Modal() {
+                const providerOptions = {
+                    walletconnect: {
+                        package: window.WalletConnectProvider.default,
+                        options: {
+                            rpc: {
+                                56: "https://bsc-dataseed.binance.org/",
+                                97: "https://data-seed-prebsc-1-s1.binance.org:8545/"
+                            },
+                            chainId: 56
+                        }
+                    }
+                };
+
+                web3Modal = new window.Web3Modal.default({
+                    network: "binance",
+                    cacheProvider: true,
+                    providerOptions,
+                    theme: {
+                        background: "rgb(5, 5, 5)",
+                        main: "rgb(255, 140, 0)",
+                        secondary: "rgb(255, 215, 0)",
+                        border: "rgb(51, 51, 51)",
+                        hover: "rgb(255, 165, 0)"
+                    }
+                });
+
+                // 检查是否已经有缓存的provider
+                if (web3Modal.cachedProvider) {
+                    connectWallet();
+                }
+            }
 
             // 连接钱包
             async function connectWallet() {
@@ -2742,24 +2772,22 @@
                     chainId = await web3.eth.getChainId();
                     
                     // 检查是否在BSC主网
-                    if (chainId !== 56) {
-                        showNotification('warning', 'Please switch to BSC Mainnet', 'StarBull presale is on Binance Smart Chain (Chain ID: 56)');
+                    if (chainId !== 56 && chainId !== 97) {
+                        showNotification('warning', 'Wrong Network', 'Please switch to BSC Mainnet or Testnet');
                         await switchToBSC();
+                        chainId = await web3.eth.getChainId();
                     }
                     
                     // 更新UI
                     updateWalletUI();
                     isConnected = true;
                     
-                    // 初始化合约
-                    await initContract();
-                    
-                    showNotification('success', 'Wallet connected successfully', `Connected to ${getWalletName(provider)}`);
+                    showNotification('success', 'Wallet Connected', `Connected: ${account.substring(0, 6)}...${account.substring(account.length - 4)}`);
                     hideLoading();
                     
                 } catch (error) {
                     console.error('Wallet connection error:', error);
-                    showNotification('error', 'Connection failed', error.message);
+                    showNotification('error', 'Connection Failed', error.message || 'Please try again');
                     hideLoading();
                 }
             }
@@ -2770,7 +2798,7 @@
                     await provider.close();
                 }
                 
-                if (web3Modal && web3Modal.clearCachedProvider) {
+                if (web3Modal) {
                     web3Modal.clearCachedProvider();
                 }
                 
@@ -2780,7 +2808,7 @@
                 provider = null;
                 
                 updateWalletUI();
-                showNotification('info', 'Wallet disconnected', 'You have been disconnected from your wallet');
+                showNotification('info', 'Disconnected', 'Wallet disconnected successfully');
             }
 
             // 切换到BSC网络
@@ -2788,7 +2816,7 @@
                 try {
                     await window.ethereum.request({
                         method: 'wallet_switchEthereumChain',
-                        params: [{ chainId: '0x38' }], // 56 in hex
+                        params: [{ chainId: '0x38' }], // 56 in hex for mainnet
                     });
                 } catch (switchError) {
                     // 如果网络未添加，添加BSC网络
@@ -2798,7 +2826,7 @@
                                 method: 'wallet_addEthereumChain',
                                 params: [{
                                     chainId: '0x38',
-                                    chainName: 'Binance Smart Chain',
+                                    chainName: 'Binance Smart Chain Mainnet',
                                     nativeCurrency: {
                                         name: 'BNB',
                                         symbol: 'BNB',
@@ -2810,7 +2838,11 @@
                             });
                         } catch (addError) {
                             console.error('Failed to add BSC network:', addError);
+                            showNotification('error', 'Network Error', 'Failed to add BSC network. Please add it manually.');
                         }
+                    } else {
+                        console.error('Failed to switch network:', switchError);
+                        showNotification('error', 'Network Error', 'Failed to switch to BSC network.');
                     }
                 }
             }
@@ -2818,16 +2850,19 @@
             // 更新钱包UI
             function updateWalletUI() {
                 const walletBtn = document.getElementById('connectWalletBtn');
+                const connectBtn = document.getElementById('connectBtn');
                 const walletStatus = document.getElementById('walletStatus');
                 const walletAddress = document.getElementById('walletAddress');
                 
                 if (isConnected && account) {
-                    // 更新按钮
-                    walletBtn.innerHTML = `
-                        <i class="fas fa-wallet"></i>
-                        <span>${account.substring(0, 6)}...${account.substring(account.length - 4)}</span>
-                    `;
+                    // 更新连接按钮
+                    const shortAddress = `${account.substring(0, 6)}...${account.substring(account.length - 4)}`;
+                    walletBtn.innerHTML = `<i class="fas fa-wallet"></i><span>${shortAddress}</span>`;
                     walletBtn.classList.add('connected');
+                    
+                    connectBtn.innerHTML = '<i class="fas fa-check-circle"></i><span>Wallet Connected</span>';
+                    connectBtn.classList.remove('btn-primary');
+                    connectBtn.classList.add('btn-success');
                     
                     // 显示钱包地址
                     walletAddress.textContent = account;
@@ -2840,11 +2875,12 @@
                     
                 } else {
                     // 重置按钮
-                    walletBtn.innerHTML = `
-                        <i class="fas fa-wallet"></i>
-                        <span>Connect Wallet</span>
-                    `;
+                    walletBtn.innerHTML = '<i class="fas fa-wallet"></i><span>Connect Wallet</span>';
                     walletBtn.classList.remove('connected');
+                    
+                    connectBtn.innerHTML = '<i class="fas fa-wallet"></i><span>Connect Wallet to Purchase</span>';
+                    connectBtn.classList.remove('btn-success');
+                    connectBtn.classList.add('btn-primary');
                     
                     // 隐藏钱包地址
                     walletStatus.classList.add('d-none');
@@ -2854,21 +2890,18 @@
                 }
             }
 
-            // 获取钱包名称
-            function getWalletName(provider) {
-                if (provider.isMetaMask) return 'MetaMask';
-                if (provider.isTrust) return 'Trust Wallet';
-                if (provider.isWalletConnect) return 'WalletConnect';
-                if (provider.isCoinbaseWallet) return 'Coinbase Wallet';
-                return 'Web3 Wallet';
-            }
-
             // 事件监听器
             connectWalletBtn.addEventListener('click', () => {
                 if (!isConnected) {
                     walletModal.classList.add('active');
                 } else {
                     disconnectWallet();
+                }
+            });
+
+            connectBtn.addEventListener('click', () => {
+                if (!isConnected) {
+                    walletModal.classList.add('active');
                 }
             });
 
@@ -2895,7 +2928,7 @@
                     if (accounts.length > 0) {
                         account = accounts[0];
                         updateWalletUI();
-                        showNotification('info', 'Account changed', 'Wallet account has been updated');
+                        showNotification('info', 'Account Changed', 'Wallet account has been updated');
                     } else {
                         disconnectWallet();
                     }
@@ -2905,6 +2938,9 @@
                     window.location.reload();
                 });
             }
+
+            // 初始化
+            initWeb3Modal();
         }
 
         // ===== 购买功能 =====
@@ -3001,7 +3037,7 @@
                 try {
                     showLoading('Processing purchase...');
                     
-                    // 模拟购买过程（在实际部署中，这里会调用智能合约）
+                    // 模拟购买过程
                     buyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Processing...</span>';
                     buyBtn.disabled = true;
                     
@@ -3143,153 +3179,6 @@
             calculateTokens();
         }
 
-        // ===== 智能合约集成 =====
-        async function initContractIntegration() {
-            // StarBull 合约地址
-            const contractAddress = '0x36e18dCf2364F25701661C623945e99c6E39E61B';
-            
-            // 预售合约地址
-            const presaleAddress = '0xA616911194eca5aD6E858a2aCFAC2cDaDC8f04B1';
-            
-            // 合约ABI（简化版 - 实际部署时需要完整的ABI）
-            const contractABI = [
-                {
-                    "constant": true,
-                    "inputs": [],
-                    "name": "totalSupply",
-                    "outputs": [{"name": "", "type": "uint256"}],
-                    "type": "function"
-                },
-                {
-                    "constant": true,
-                    "inputs": [],
-                    "name": "balanceOf",
-                    "outputs": [{"name": "", "type": "uint256"}],
-                    "type": "function"
-                },
-                {
-                    "constant": true,
-                    "inputs": [],
-                    "name": "getOwner",
-                    "outputs": [{"name": "", "type": "address"}],
-                    "type": "function"
-                }
-            ];
-            
-            const presaleABI = [
-                {
-                    "constant": true,
-                    "inputs": [],
-                    "name": "totalRaised",
-                    "outputs": [{"name": "", "type": "uint256"}],
-                    "type": "function"
-                },
-                {
-                    "constant": true,
-                    "inputs": [],
-                    "name": "currentStage",
-                    "outputs": [{"name": "", "type": "uint256"}],
-                    "type": "function"
-                },
-                {
-                    "constant": true,
-                    "inputs": [],
-                    "name": "stagePrice",
-                    "outputs": [{"name": "", "type": "uint256"}],
-                    "type": "function"
-                },
-                {
-                    "constant": false,
-                    "inputs": [{"name": "referral", "type": "address"}],
-                    "name": "buyTokens",
-                    "outputs": [],
-                    "type": "function",
-                    "payable": true
-                }
-            ];
-            
-            async function initContract() {
-                if (web3) {
-                    try {
-                        // 初始化合约实例
-                        contract = new web3.eth.Contract(contractABI, contractAddress);
-                        presaleContract = new web3.eth.Contract(presaleABI, presaleAddress);
-                        
-                        // 获取合约数据
-                        await updateContractData();
-                        
-                        console.log('Contract initialized successfully');
-                    } catch (error) {
-                        console.error('Contract initialization error:', error);
-                    }
-                }
-            }
-            
-            async function updateContractData() {
-                try {
-                    // 获取总供应量
-                    const totalSupply = await contract.methods.totalSupply().call();
-                    
-                    // 获取预售数据
-                    const totalRaised = await presaleContract.methods.totalRaised().call();
-                    const stage = await presaleContract.methods.currentStage().call();
-                    const price = await presaleContract.methods.stagePrice().call();
-                    
-                    // 更新显示
-                    document.getElementById('totalRaised').textContent = 
-                        `${web3.utils.fromWei(totalRaised, 'ether')} BNB`;
-                    
-                    currentStage = parseInt(stage);
-                    currentPrice = parseFloat(web3.utils.fromWei(price, 'ether'));
-                    
-                    // 更新UI
-                    updateStageDisplay();
-                    
-                } catch (error) {
-                    console.error('Contract data fetch error:', error);
-                }
-            }
-            
-            function updateStageDisplay() {
-                // 更新阶段徽章
-                const stageBadge = document.querySelector('.stage-badge span');
-                const heroBadge = document.querySelector('.hero-badge-text');
-                
-                if (stageBadge) {
-                    stageBadge.textContent = `Stage ${currentStage}/23`;
-                }
-                
-                if (heroBadge) {
-                    heroBadge.textContent = `LIVE PRESALE - STAGE ${currentStage}/23`;
-                }
-                
-                // 更新价格表当前阶段
-                updatePriceTable();
-            }
-            
-            function updatePriceTable() {
-                const tableRows = document.querySelectorAll('.price-table tr');
-                tableRows.forEach(row => row.classList.remove('current'));
-                
-                // 根据当前阶段高亮对应的行
-                if (currentStage <= 5) {
-                    tableRows[1].classList.add('current');
-                } else if (currentStage <= 10) {
-                    tableRows[2].classList.add('current');
-                } else if (currentStage <= 15) {
-                    tableRows[3].classList.add('current');
-                } else if (currentStage <= 20) {
-                    tableRows[4].classList.add('current');
-                } else {
-                    tableRows[5].classList.add('current');
-                }
-            }
-            
-            // 暴露函数供其他部分调用
-            window.initContract = initContract;
-            window.updateContractData = updateContractData;
-        }
-
         // ===== 倒计时功能 =====
         function initCountdown() {
             const daysEl = document.getElementById('days');
@@ -3342,398 +3231,48 @@
             const langOptions = document.querySelectorAll('.lang-option');
             const langText = langBtn.querySelector('span');
 
-            // 翻译数据
-            const translations = {
-                en: {
-                    // 导航
-                    navHome: "Home",
-                    navPresale: "Presale",
-                    navTokenomics: "Tokenomics",
-                    navHowToBuy: "How to Buy",
-                    navRoadmap: "Roadmap",
-                    navWhitepaper: "Whitepaper",
-                    navLockedLP: "Locked LP",
-                    
-                    // Hero区域
-                    heroBadge: "LIVE PRESALE - STAGE 11/23",
-                    heroTitle: "Welcome to StarBull",
-                    heroSubtitle: "The next evolution in meme tokens. 23-stage presale with automatic price increases. Audited contract, locked liquidity, and community-driven development.",
-                    statTotalRaised: "Total Raised",
-                    statCurrentPrice: "Current Price per 1M STAR",
-                    statHolders: "Token Holders",
-                    stakingRewards: "Staking Rewards",
-                    
-                    // 购买区域
-                    buyTitle: "Buy StarBull Tokens",
-                    purchaseCardTitle: "Purchase STARBULL",
-                    stageBadge: "Stage 11/23",
-                    progressLabel: "Presale Progress",
-                    nextStage: "Next Stage: +27.4%",
-                    selectCrypto: "Select Crypto",
-                    enterAmount: "Enter Amount",
-                    youReceive: "You Receive",
-                    conversionNote: "Price automatically increases each stage",
-                    referralPlaceholder: "Enter referral code for bonus",
-                    termsText: "By purchasing you agree to our Terms of Use & Disclaimer. I understand that cryptocurrency investments are volatile and risky. Only invest what you can afford to lose.",
-                    buyButton: "Buy STARBULL",
-                    securityTitle: "Secure & Audited",
-                    auditText: "StarBull's smart contract has been audited by leading blockchain security companies",
-                    liquidityText: "100% of presale liquidity locked for 24 months on DxLock",
-                    ownershipText: "Ownership will be renounced at launch to ensure transparency",
-                    
-                    // 侧边栏
-                    nextStageIn: "Next Stage In",
-                    days: "Days",
-                    hours: "Hours",
-                    minutes: "Minutes",
-                    seconds: "Seconds",
-                    stageInfo: "Price increases by 27.4% in next stage",
-                    priceStages: "Price Stages",
-                    recentTransactions: "Recent Transactions",
-                    
-                    // 代币经济学
-                    tokenomicsTitle: "Tokenomics",
-                    totalSupplyTitle: "Total Supply",
-                    totalSupplyDesc: "1,000,000,000 STARBULL tokens. Fair launch with no team allocation, ensuring equal opportunities for all investors.",
-                    taxStructureTitle: "Tax Structure",
-                    taxStructureDesc: "0% buy tax, 5% sell tax distributed as: 1% burn, 2% marketing, 2% liquidity. This ensures sustainable growth.",
-                    liquidityTitle: "Liquidity Locked",
-                    liquidityDesc: "100% of presale liquidity locked for 24 months on DxLock. This prevents rug pulls and ensures project longevity.",
-                    securityTitle: "Security First",
-                    securityDesc: "Smart contract audited by leading security firms. Ownership will be renounced at launch to ensure complete decentralization.",
-                    
-                    // 如何购买
-                    howToBuyTitle: "How to Buy",
-                    step1Title: "Connect Wallet",
-                    step1Desc: "Connect your MetaMask, Trust Wallet, or any Web3 wallet using the connect button above. Ensure you're on BSC network.",
-                    step2Title: "Select Amount",
-                    step2Desc: "Enter the amount of BNB you want to spend. The STARBULL amount will automatically calculate based on current stage price.",
-                    step3Title: "Confirm Purchase",
-                    step3Desc: "Click \"Buy STARBULL\" and confirm the transaction in your wallet. Approve the gas fees to complete the purchase.",
-                    step4Title: "Receive Tokens",
-                    step4Desc: "Tokens are sent instantly to your wallet. You can stake them for 95% APY or hold them for future appreciation.",
-                    
-                    // 路线图
-                    roadmapTitle: "Roadmap",
-                    q1Phase: "Q1 2024 - THE AWAKENING",
-                    q1Title: "Community Building & Presale Launch",
-                    q1Desc: "The genesis of StarBull begins with community formation and the revolutionary 23-stage presale. This phase establishes the foundation for exponential growth.",
-                    q2Phase: "Q2 2024 - THE PRESALE ERA",
-                    q2Title: "Presale Completion & DEX Listing",
-                    q2Desc: "Completion of the 23-stage presale with automatic price increases, followed by DEX listing and initial liquidity provision.",
-                    q3Phase: "Q3 2024 - THE FORMATION",
-                    q3Title: "Ecosystem Development & Expansion",
-                    q3Desc: "Building the StarBull ecosystem with staking platform, partnerships, and utility development to create real value beyond speculation.",
-                    q4Phase: "Q4 2024 - THE LAUNCH",
-                    q4Title: "Mass Adoption & Utility Expansion",
-                    q4Desc: "Achieving mass adoption through utility expansion, NFT integration, and mainstream recognition as a leading meme token with real utility.",
-                    
-                    // 白皮书
-                    whitepaperTitle: "Whitepaper",
-                    whitepaperDesc: "Dive deep into the StarBull ecosystem. Our comprehensive whitepaper details the tokenomics, technology, roadmap, and vision behind the next generation meme token.",
-                    downloadWhitepaper: "Download Whitepaper (PDF)",
-                    
-                    // 页脚
-                    footerDescription: "The next generation meme token with real utility, 95% APY staking, and a fair 23-stage presale. Join the revolution today.",
-                    quickLinks: "Quick Links",
-                    contractAddress: "Contract Address",
-                    tokenContract: "Token Contract:",
-                    presaleContract: "Presale Contract:",
-                    copyAddress: "Copy Address",
-                    copyright: "© 2024 StarBull. All rights reserved. | Inspired by MoonBull & Bullzilla",
-                    disclaimer: "Disclaimer: This is a meme token with inherent volatility and risk. Cryptocurrency investments are subject to market risks. Only invest what you can afford to lose. This website does not constitute financial advice. Always do your own research.",
-                    
-                    // 钱包模态框
-                    connectWallet: "Connect Wallet",
-                    chooseWallet: "Choose your preferred wallet to connect:",
-                    securityNote: "We do not have access to your private keys or funds. Your wallet connection is secure and encrypted.",
-                    
-                    // 通知
-                    success: "Success",
-                    error: "Error",
-                    warning: "Warning",
-                    info: "Info"
-                },
-                zh: {
-                    // 导航
-                    navHome: "首页",
-                    navPresale: "预售",
-                    navTokenomics: "代币经济学",
-                    navHowToBuy: "如何购买",
-                    navRoadmap: "路线图",
-                    navWhitepaper: "白皮书",
-                    navLockedLP: "锁定流动性",
-                    
-                    // Hero区域
-                    heroBadge: "预售进行中 - 第11/23阶段",
-                    heroTitle: "欢迎来到StarBull",
-                    heroSubtitle: "迷因代币的下一代进化。23阶段预售，价格自动上涨。经过审计的合约，锁定流动性，社区驱动发展。",
-                    statTotalRaised: "总筹集金额",
-                    statCurrentPrice: "每100万STAR当前价格",
-                    statHolders: "代币持有者",
-                    stakingRewards: "质押奖励",
-                    
-                    // 购买区域
-                    buyTitle: "购买StarBull代币",
-                    purchaseCardTitle: "购买STARBULL",
-                    stageBadge: "第11/23阶段",
-                    progressLabel: "预售进度",
-                    nextStage: "下一阶段: +27.4%",
-                    selectCrypto: "选择加密货币",
-                    enterAmount: "输入金额",
-                    youReceive: "您将收到",
-                    conversionNote: "每阶段价格自动上涨",
-                    referralPlaceholder: "输入推荐码获取奖励",
-                    termsText: "购买即表示您同意我们的使用条款和免责声明。我了解加密货币投资具有波动性和风险性。只投资您能承受损失的资金。",
-                    buyButton: "购买STARBULL",
-                    securityTitle: "安全与审计",
-                    auditText: "StarBull的智能合约已由领先的区块链安全公司审计",
-                    liquidityText: "100%预售流动性在DxLock上锁定24个月",
-                    ownershipText: "上线时将放弃所有权以确保透明度",
-                    
-                    // 侧边栏
-                    nextStageIn: "下一阶段倒计时",
-                    days: "天",
-                    hours: "小时",
-                    minutes: "分钟",
-                    seconds: "秒",
-                    stageInfo: "下一阶段价格上涨27.4%",
-                    priceStages: "价格阶段",
-                    recentTransactions: "最近交易",
-                    
-                    // 代币经济学
-                    tokenomicsTitle: "代币经济学",
-                    totalSupplyTitle: "总供应量",
-                    totalSupplyDesc: "1,000,000,000 STARBULL代币。公平启动，无团队分配，确保所有投资者机会均等。",
-                    taxStructureTitle: "税收结构",
-                    taxStructureDesc: "0%购买税，5%出售税分配：1%销毁，2%营销，2%流动性。这确保了可持续发展。",
-                    liquidityTitle: "流动性锁定",
-                    liquidityDesc: "100%预售流动性在DxLock上锁定24个月。这防止了rug pull并确保项目长寿。",
-                    securityTitle: "安全第一",
-                    securityDesc: "智能合约由领先的安全公司审计。上线时将放弃所有权以确保完全去中心化。",
-                    
-                    // 如何购买
-                    howToBuyTitle: "如何购买",
-                    step1Title: "连接钱包",
-                    step1Desc: "使用上方的连接按钮连接您的MetaMask、Trust Wallet或任何Web3钱包。确保您在BSC网络上。",
-                    step2Title: "选择金额",
-                    step2Desc: "输入您要花费的BNB金额。STARBULL金额将根据当前阶段价格自动计算。",
-                    step3Title: "确认购买",
-                    step3Desc: "点击\"购买STARBULL\"并在您的钱包中确认交易。批准Gas费用以完成购买。",
-                    step4Title: "接收代币",
-                    step4Desc: "代币将立即发送到您的钱包。您可以质押它们获得95%的年化收益或持有以待升值。",
-                    
-                    // 路线图
-                    roadmapTitle: "路线图",
-                    q1Phase: "2024年第一季度 - 觉醒",
-                    q1Title: "社区建设与预售启动",
-                    q1Desc: "StarBull的起源始于社区形成和革命性的23阶段预售。这一阶段为指数级增长奠定了基础。",
-                    q2Phase: "2024年第二季度 - 预售时代",
-                    q2Title: "预售完成与DEX上市",
-                    q2Desc: "完成23阶段预售并自动价格上涨，随后进行DEX上市和初始流动性提供。",
-                    q3Phase: "2024年第三季度 - 形成",
-                    q3Title: "生态系统开发与扩展",
-                    q3Desc: "通过质押平台、合作伙伴关系和实用性开发构建StarBull生态系统，创造超越投机的真实价值。",
-                    q4Phase: "2024年第四季度 - 发射",
-                    q4Title: "大规模采用与实用性扩展",
-                    q4Desc: "通过实用性扩展、NFT整合和主流认可实现大规模采用，成为具有真实实用性的领先迷因代币。",
-                    
-                    // 白皮书
-                    whitepaperTitle: "白皮书",
-                    whitepaperDesc: "深入了解StarBull生态系统。我们的全面白皮书详细介绍了下一代迷因代币背后的代币经济学、技术、路线图和愿景。",
-                    downloadWhitepaper: "下载白皮书(PDF)",
-                    
-                    // 页脚
-                    footerDescription: "具有真实实用性、95%质押年化收益和公平23阶段预售的下一代迷因代币。立即加入革命。",
-                    quickLinks: "快速链接",
-                    contractAddress: "合约地址",
-                    tokenContract: "代币合约:",
-                    presaleContract: "预售合约:",
-                    copyAddress: "复制地址",
-                    copyright: "© 2024 StarBull。保留所有权利。| 灵感来自MoonBull和Bullzilla",
-                    disclaimer: "免责声明：这是一个具有固有波动性和风险的迷因代币。加密货币投资存在市场风险。只投资您能承受损失的资金。本网站不构成财务建议。请始终进行自己的研究。",
-                    
-                    // 钱包模态框
-                    connectWallet: "连接钱包",
-                    chooseWallet: "选择您喜欢的钱包进行连接：",
-                    securityNote: "我们无法访问您的私钥或资金。您的钱包连接是安全且加密的。",
-                    
-                    // 通知
-                    success: "成功",
-                    error: "错误",
-                    warning: "警告",
-                    info: "信息"
-                }
-            };
-
-            // 当前语言
-            let currentLang = 'en';
-
-            // 切换语言
+            // 简单语言切换逻辑
             function switchLanguage(lang) {
-                if (!translations[lang]) return;
-                
-                currentLang = lang;
-                langText.textContent = lang.toUpperCase();
-                
-                // 更新所有文本元素
-                const translation = translations[lang];
-                
-                // 导航
-                updateTextBySelector('[data-i18n="navHome"]', translation.navHome);
-                updateTextBySelector('[data-i18n="navPresale"]', translation.navPresale);
-                updateTextBySelector('[data-i18n="navTokenomics"]', translation.navTokenomics);
-                updateTextBySelector('[data-i18n="navHowToBuy"]', translation.navHowToBuy);
-                updateTextBySelector('[data-i18n="navRoadmap"]', translation.navRoadmap);
-                updateTextBySelector('[data-i18n="navWhitepaper"]', translation.navWhitepaper);
-                updateTextBySelector('[data-i18n="navLockedLP"]', translation.navLockedLP);
-                
-                // Hero区域
-                updateTextBySelector('[data-i18n="heroBadge"]', translation.heroBadge);
-                updateTextBySelector('[data-i18n="heroTitle"]', translation.heroTitle);
-                updateTextBySelector('[data-i18n="heroSubtitle"]', translation.heroSubtitle);
-                updateTextBySelector('[data-i18n="statTotalRaised"]', translation.statTotalRaised);
-                updateTextBySelector('[data-i18n="statCurrentPrice"]', translation.statCurrentPrice);
-                updateTextBySelector('[data-i18n="statHolders"]', translation.statHolders);
-                updateTextBySelector('[data-i18n="stakingRewards"]', translation.stakingRewards);
-                
-                // 购买区域
-                updateTextBySelector('[data-i18n="buyTitle"]', translation.buyTitle);
-                updateTextBySelector('[data-i18n="purchaseCardTitle"]', translation.purchaseCardTitle);
-                updateTextBySelector('[data-i18n="stageBadge"]', translation.stageBadge);
-                updateTextBySelector('[data-i18n="progressLabel"]', translation.progressLabel);
-                updateTextBySelector('[data-i18n="nextStage"]', translation.nextStage);
-                updateTextBySelector('[data-i18n="selectCrypto"]', translation.selectCrypto);
-                updateTextBySelector('[data-i18n="enterAmount"]', translation.enterAmount);
-                updateTextBySelector('[data-i18n="youReceive"]', translation.youReceive);
-                updateTextBySelector('[data-i18n="conversionNote"]', translation.conversionNote);
-                updateTextBySelector('[data-i18n="referralPlaceholder"]', translation.referralPlaceholder);
-                updateTextBySelector('[data-i18n="termsText"]', translation.termsText);
-                updateTextBySelector('[data-i18n="buyButton"]', translation.buyButton);
-                updateTextBySelector('[data-i18n="securityTitle"]', translation.securityTitle);
-                updateTextBySelector('[data-i18n="auditText"]', translation.auditText);
-                updateTextBySelector('[data-i18n="liquidityText"]', translation.liquidityText);
-                updateTextBySelector('[data-i18n="ownershipText"]', translation.ownershipText);
-                
-                // 侧边栏
-                updateTextBySelector('[data-i18n="nextStageIn"]', translation.nextStageIn);
-                updateTextBySelector('[data-i18n="days"]', translation.days);
-                updateTextBySelector('[data-i18n="hours"]', translation.hours);
-                updateTextBySelector('[data-i18n="minutes"]', translation.minutes);
-                updateTextBySelector('[data-i18n="seconds"]', translation.seconds);
-                updateTextBySelector('[data-i18n="stageInfo"]', translation.stageInfo);
-                updateTextBySelector('[data-i18n="priceStages"]', translation.priceStages);
-                updateTextBySelector('[data-i18n="recentTransactions"]', translation.recentTransactions);
-                
-                // 代币经济学
-                updateTextBySelector('[data-i18n="tokenomicsTitle"]', translation.tokenomicsTitle);
-                updateTextBySelector('[data-i18n="totalSupplyTitle"]', translation.totalSupplyTitle);
-                updateTextBySelector('[data-i18n="totalSupplyDesc"]', translation.totalSupplyDesc);
-                updateTextBySelector('[data-i18n="taxStructureTitle"]', translation.taxStructureTitle);
-                updateTextBySelector('[data-i18n="taxStructureDesc"]', translation.taxStructureDesc);
-                updateTextBySelector('[data-i18n="liquidityTitle"]', translation.liquidityTitle);
-                updateTextBySelector('[data-i18n="liquidityDesc"]', translation.liquidityDesc);
-                updateTextBySelector('[data-i18n="securityTitle"]', translation.securityTitle);
-                updateTextBySelector('[data-i18n="securityDesc"]', translation.securityDesc);
-                
-                // 如何购买
-                updateTextBySelector('[data-i18n="howToBuyTitle"]', translation.howToBuyTitle);
-                updateTextBySelector('[data-i18n="step1Title"]', translation.step1Title);
-                updateTextBySelector('[data-i18n="step1Desc"]', translation.step1Desc);
-                updateTextBySelector('[data-i18n="step2Title"]', translation.step2Title);
-                updateTextBySelector('[data-i18n="step2Desc"]', translation.step2Desc);
-                updateTextBySelector('[data-i18n="step3Title"]', translation.step3Title);
-                updateTextBySelector('[data-i18n="step3Desc"]', translation.step3Desc);
-                updateTextBySelector('[data-i18n="step4Title"]', translation.step4Title);
-                updateTextBySelector('[data-i18n="step4Desc"]', translation.step4Desc);
-                
-                // 路线图
-                updateTextBySelector('[data-i18n="roadmapTitle"]', translation.roadmapTitle);
-                updateTextBySelector('[data-i18n="q1Phase"]', translation.q1Phase);
-                updateTextBySelector('[data-i18n="q1Title"]', translation.q1Title);
-                updateTextBySelector('[data-i18n="q1Desc"]', translation.q1Desc);
-                updateTextBySelector('[data-i18n="q2Phase"]', translation.q2Phase);
-                updateTextBySelector('[data-i18n="q2Title"]', translation.q2Title);
-                updateTextBySelector('[data-i18n="q2Desc"]', translation.q2Desc);
-                updateTextBySelector('[data-i18n="q3Phase"]', translation.q3Phase);
-                updateTextBySelector('[data-i18n="q3Title"]', translation.q3Title);
-                updateTextBySelector('[data-i18n="q3Desc"]', translation.q3Desc);
-                updateTextBySelector('[data-i18n="q4Phase"]', translation.q4Phase);
-                updateTextBySelector('[data-i18n="q4Title"]', translation.q4Title);
-                updateTextBySelector('[data-i18n="q4Desc"]', translation.q4Desc);
-                
-                // 白皮书
-                updateTextBySelector('[data-i18n="whitepaperTitle"]', translation.whitepaperTitle);
-                updateTextBySelector('[data-i18n="whitepaperDesc"]', translation.whitepaperDesc);
-                updateTextBySelector('[data-i18n="downloadWhitepaper"]', translation.downloadWhitepaper);
-                
-                // 页脚
-                updateTextBySelector('[data-i18n="footerDescription"]', translation.footerDescription);
-                updateTextBySelector('[data-i18n="quickLinks"]', translation.quickLinks);
-                updateTextBySelector('[data-i18n="contractAddress"]', translation.contractAddress);
-                updateTextBySelector('[data-i18n="tokenContract"]', translation.tokenContract);
-                updateTextBySelector('[data-i18n="presaleContract"]', translation.presaleContract);
-                updateTextBySelector('[data-i18n="copyAddress"]', translation.copyAddress);
-                updateTextBySelector('[data-i18n="copyright"]', translation.copyright);
-                updateTextBySelector('[data-i18n="disclaimer"]', translation.disclaimer);
-                
-                // 钱包模态框
-                updateTextBySelector('[data-i18n="connectWallet"]', translation.connectWallet);
-                updateTextBySelector('[data-i18n="chooseWallet"]', translation.chooseWallet);
-                updateTextBySelector('[data-i18n="securityNote"]', translation.securityNote);
-                
                 // 保存语言偏好
                 localStorage.setItem('starbull_lang', lang);
-            }
-
-            // 更新文本元素的辅助函数
-            function updateTextBySelector(selector, text) {
-                const elements = document.querySelectorAll(selector);
-                elements.forEach(element => {
-                    element.textContent = text;
+                langText.textContent = lang.toUpperCase();
+                
+                // 更新活动状态
+                langOptions.forEach(opt => {
+                    if (opt.getAttribute('data-lang') === lang) {
+                        opt.classList.add('active');
+                    } else {
+                        opt.classList.remove('active');
+                    }
                 });
+                
+                showNotification('success', 'Language Changed', `Switched to ${getLanguageName(lang)}`);
             }
 
-            // 初始化data-i18n属性（第一次运行）
-            function initI18nAttributes() {
-                // 这里可以添加初始化代码，为需要翻译的元素添加data-i18n属性
-                // 为了简洁，这里省略了完整的初始化代码
+            function getLanguageName(lang) {
+                const names = {
+                    en: 'English',
+                    zh: '中文',
+                    es: 'Español',
+                    ja: '日本語',
+                    ko: '한국어'
+                };
+                return names[lang] || lang;
             }
 
             // 语言选项点击
             langOptions.forEach(option => {
                 option.addEventListener('click', () => {
                     const lang = option.getAttribute('data-lang');
-                    
-                    // 更新活动状态
-                    langOptions.forEach(opt => opt.classList.remove('active'));
-                    option.classList.add('active');
-                    
-                    // 切换语言
                     switchLanguage(lang);
-                    
-                    // 显示通知
-                    showNotification('success', 'Language changed', `Switched to ${option.textContent}`);
                 });
             });
 
             // 检查保存的语言偏好
             const savedLang = localStorage.getItem('starbull_lang');
-            if (savedLang && translations[savedLang]) {
+            if (savedLang) {
                 switchLanguage(savedLang);
-                
-                // 更新活动状态
-                langOptions.forEach(opt => {
-                    if (opt.getAttribute('data-lang') === savedLang) {
-                        opt.classList.add('active');
-                    } else {
-                        opt.classList.remove('active');
-                    }
-                });
             }
-
-            // 初始化
-            initI18nAttributes();
         }
 
         // ===== 复制按钮功能 =====
@@ -3780,7 +3319,7 @@
             }, observerOptions);
 
             // 观察需要动画的元素
-            document.querySelectorAll('.stat-card, .feature-card, .info-card, .tokenomics-card, .step-card, .roadmap-content').forEach(el => {
+            document.querySelectorAll('.stat-card, .info-card, .tokenomics-card, .step-card, .roadmap-content').forEach(el => {
                 observer.observe(el);
             });
 
@@ -3835,6 +3374,10 @@
                 case 'warning':
                     notification.classList.add('warning');
                     notificationIcon.className = 'fas fa-exclamation-triangle';
+                    break;
+                case 'info':
+                    notification.classList.add('info');
+                    notificationIcon.className = 'fas fa-info-circle';
                     break;
                 default:
                     notification.classList.add('success');
