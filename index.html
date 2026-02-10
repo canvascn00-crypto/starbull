@@ -3,1497 +3,1955 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Starbull | The Next MoonBull</title>
-<!-- 核心库引入 -->
+<title>StarBull | Meme Token Presale - 23 Stages</title>
+
+<!-- 核心库 -->
 <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/web3modal@1.9.12/dist/index.min.js"></script>
 <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+
 <!-- 字体图标 -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+<!-- 动画库 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
 <style>
-  /* 全局配色变量（橙金系Meme币风格） */
-  :root {
-    --primary: #FF8C00;    /* 主橙金 */
-    --primary-light: #FFB74D; /* 浅橙金 */
-    --secondary: #FFD700;  /* 亮黄 */
-    --bg-main: #050505;    /* 主背景 */
-    --bg-card: #111111;    /* 卡片背景 */
-    --border: #222222;     /* 边框色 */
-    --text-normal: #F5F5F5;/* 常规文本 */
-    --text-gray: #999999;  /* 灰色文本 */
-    --success: #2ECC71;    /* 成功色 */
-    --progress-stage1: #FF8C00; /* 阶段1进度条 */
-    --progress-stage2: #FFD700; /* 阶段2进度条 */
-    --progress-stage3: #2ECC71; /* 阶段3进度条 */
-  }
+/* ===== 全局变量与重置 ===== */
+:root {
+  --primary: #FF8C00;
+  --primary-dark: #E67E00;
+  --primary-light: #FFA726;
+  --secondary: #FFD700;
+  --accent: #FF6B6B;
+  --success: #2ECC71;
+  --info: #3498DB;
+  --warning: #F39C12;
+  
+  --bg-dark: #050505;
+  --bg-card: #0F0F0F;
+  --bg-input: #1A1A1A;
+  --border: #222222;
+  --border-light: #333333;
+  
+  --text-primary: #FFFFFF;
+  --text-secondary: #AAAAAA;
+  --text-muted: #666666;
+  
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.7);
+  --glow-primary: 0 0 15px rgba(255, 140, 0, 0.5);
+  --glow-success: 0 0 15px rgba(46, 204, 113, 0.5);
+}
 
-  * {margin:0;padding:0;box-sizing:border-box;font-family:Inter, system-ui, sans-serif}
-  body {
-    background:var(--bg-main);
-    color:var(--text-normal);
-    line-height:1.5;
-    transition:all 0.3s;
-  }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-  /* 导航栏（对齐bullzilla.com/staking/风格） */
-  header {
-    background: #000;
-    border-bottom: 1px solid var(--border);
-    padding: 1rem 2rem;
-    position: sticky;
-    top: 0;
-    z-index: 999;
-  }
-  .container {max-width: 1400px;margin: 0 auto;}
-  .nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 2rem;
-  }
-  .logo {
-    font-size: 1.8rem;
-    font-weight: 900;
-    background: linear-gradient(90deg, var(--primary), var(--secondary));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    flex-shrink: 0;
-  }
-  .nav-links {
-    display: flex;
-    gap: 2.5rem;
-    align-items: center;
-    flex: 1;
-    justify-content: center;
-  }
-  .nav-links a {
-    color: var(--text-gray);
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    position: relative;
-  }
-  .nav-links a:hover {
-    color: var(--primary);
-  }
-  .nav-links a:after {
-    content: '';
-    position: absolute;
-    bottom: -4px;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: var(--primary);
-    transition: width 0.3s ease;
-  }
-  .nav-links a:hover:after {
-    width: 100%;
-  }
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px;
+}
 
-  /* 语言切换：地球图标+下拉菜单（收缩样式） */
-  .lang-dropdown {
-    position: relative;
-    display: inline-block;
-    margin-left: auto;
-  }
-  .lang-toggle {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    width: 42px;
-    height: 42px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-normal);
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  .lang-toggle:hover {
-    background: var(--primary);
-    color: #000;
-    border-color: var(--primary);
-  }
-  .lang-toggle i {
-    font-size: 1.2rem;
-  }
-  .lang-menu {
-    position: absolute;
-    top: 50px;
-    right: 0;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 0.8rem;
-    padding: 0.8rem 0;
-    min-width: 120px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-    z-index: 1000;
-  }
-  .lang-dropdown:hover .lang-menu {
-    opacity: 1;
-    visibility: visible;
-    top: 55px;
-  }
-  .lang-menu-item {
-    padding: 0.6rem 1.2rem;
-    color: var(--text-normal);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.9rem;
-  }
-  .lang-menu-item:hover {
-    background: rgba(255,140,0,0.1);
-    color: var(--primary);
-  }
-  .lang-menu-item.active {
-    color: var(--primary);
-    font-weight: 700;
-  }
+body {
+  background-color: var(--bg-dark);
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(255, 140, 0, 0.03) 0%, transparent 20%),
+    radial-gradient(circle at 90% 80%, rgba(255, 215, 0, 0.03) 0%, transparent 20%),
+    radial-gradient(circle at 50% 50%, rgba(10, 10, 10, 0.8) 0%, transparent 100%);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+  position: relative;
+}
 
-  /* Hero区 */
-  .hero {
-    padding: 4rem 2rem;
-    text-align: center;
-    background: linear-gradient(180deg, #000, var(--bg-main));
-  }
-  .hero h1 {
-    font-size: 4rem;
-    font-weight: 900;
-    background: linear-gradient(90deg, var(--primary), var(--secondary));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    margin-bottom: 1rem;
-  }
-  .hero p {
-    max-width: 800px;
-    margin: 0 auto 2rem;
-    color: var(--text-gray);
-    font-size: 1.1rem;
-  }
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    linear-gradient(45deg, transparent 30%, rgba(255, 140, 0, 0.02) 50%, transparent 70%),
+    linear-gradient(135deg, transparent 30%, rgba(255, 215, 0, 0.02) 50%, transparent 70%);
+  z-index: -1;
+  pointer-events: none;
+}
 
-  /* 核心购买框（bullzilla风格+新配色） */
-  .buy-section {padding:2rem 0 6rem}
-  .buy-card {
-    max-width:600px;
-    margin:0 auto;
-    background:linear-gradient(145deg, var(--bg-card), #181818);
-    border:1px solid var(--border);
-    border-radius:1.5rem;
-    padding:2rem;
-    box-shadow:0 10px 30px rgba(0,0,0,0.5);
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
   }
-  .buy-card h2 {
-    font-size:1.8rem;
-    margin-bottom:1.5rem;
-    color:var(--primary);
-    text-align:center;
+}
+
+/* ===== 导航栏优化 ===== */
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(5, 5, 5, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.site-header.scrolled {
+  background: rgba(5, 5, 5, 0.98);
+  box-shadow: var(--shadow-lg);
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 80px;
+  position: relative;
+}
+
+/* Logo 样式 */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  z-index: 1001;
+}
+
+.logo-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 1.2rem;
+  color: var(--bg-dark);
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: 900;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: -0.5px;
+}
+
+/* 主导航菜单 */
+.nav-menu {
+  display: flex;
+  gap: 2.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.5rem 0;
+  position: relative;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-link:hover {
+  color: var(--text-primary);
+}
+
+.nav-link.active {
+  color: var(--primary);
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  border-radius: 1px;
+}
+
+.nav-link i {
+  font-size: 0.9rem;
+}
+
+/* 右侧功能区 */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* 语言切换 */
+.lang-switcher {
+  position: relative;
+}
+
+.lang-btn {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.lang-btn:hover {
+  background: var(--border);
+  color: var(--text-primary);
+}
+
+.lang-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0;
+  min-width: 120px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  z-index: 1000;
+  box-shadow: var(--shadow-lg);
+}
+
+.lang-switcher:hover .lang-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.lang-option {
+  padding: 0.6rem 1rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.lang-option:hover {
+  background: rgba(255, 140, 0, 0.1);
+  color: var(--primary);
+}
+
+.lang-option.active {
+  color: var(--primary);
+  font-weight: 600;
+  background: rgba(255, 140, 0, 0.05);
+}
+
+/* 钱包连接按钮 */
+.wallet-btn {
+  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  border: none;
+  border-radius: 10px;
+  padding: 0.7rem 1.5rem;
+  color: var(--bg-dark);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.wallet-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glow-primary);
+}
+
+.wallet-btn.connected {
+  background: linear-gradient(90deg, var(--success), #27ae60);
+  color: white;
+}
+
+.wallet-btn i {
+  font-size: 1rem;
+}
+
+/* 汉堡菜单按钮 (移动端) */
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  z-index: 1001;
+}
+
+/* 移动端样式 */
+@media (max-width: 1024px) {
+  .menu-toggle {
+    display: block;
   }
   
-  /* 预售阶段+进度条 */
-  .presale-stage {
-    background:rgba(255,140,0,0.1);
-    color:var(--primary);
-    padding:1rem;
-    border-radius:1rem;
-    text-align:center;
-    font-weight:700;
-    margin-bottom:1.5rem;
-    border:1px solid rgba(255,140,0,0.2);
-  }
-  .progress-container {
-    margin-bottom:1.5rem;
-  }
-  .progress-info {
-    display:flex;
-    justify-content:space-between;
-    color:var(--text-gray);
-    font-size:0.9rem;
-    margin-bottom:0.5rem;
-  }
-  .progress-bar {
-    height:0.8rem;
-    background:var(--border);
-    border-radius:0.4rem;
-    overflow:hidden;
-    position:relative;
-  }
-  .progress-fill {
-    height:100%;
-    border-radius:0.4rem;
-    transition:width 0.8s ease, background-color 0.8s ease;
-  }
-  .stage1-fill {background:var(--progress-stage1)}
-  .stage2-fill {background:var(--progress-stage2)}
-  .stage3-fill {background:var(--progress-stage3)}
-  
-  /* 钱包连接区 - 新增适配逻辑 */
-  .wallet-section {margin-bottom:2rem}
-  .wallet-btn {
-    width:100%;
-    padding:1rem;
-    border-radius:1rem;
-    background:linear-gradient(145deg, var(--primary), var(--primary-light));
-    color:#000;
-    border:none;
-    font-weight:700;
-    font-size:1rem;
-    cursor:pointer;
-    transition:all 0.3s;
-  }
-  .wallet-btn:hover {
-    transform:translateY(-2px);
-    box-shadow:0 5px 15px rgba(255,140,0,0.4);
-  }
-  .wallet-status {
-    text-align:center;
-    margin-top:1rem;
-    color:var(--text-gray);
-    font-size:0.9rem;
-  }
-
-  /* 钱包选择弹窗（移动端） */
-  .wallet-modal {
+  .nav-menu {
     position: fixed;
-    top: 0;
+    top: 80px;
     left: 0;
     width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-  }
-  .wallet-modal.active {
-    opacity: 1;
-    visibility: visible;
-  }
-  .wallet-modal-content {
     background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 1.5rem;
-    padding: 2rem;
-    width: 90%;
-    max-width: 400px;
-    max-height: 80vh;
-    overflow-y: auto;
-  }
-  .wallet-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
-  }
-  .wallet-modal-title {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--primary);
-  }
-  .wallet-modal-close {
-    background: none;
-    border: none;
-    color: var(--text-gray);
-    font-size: 1.5rem;
-    cursor: pointer;
-  }
-  .wallet-list {
-    display: flex;
     flex-direction: column;
-    gap: 1rem;
-  }
-  .wallet-item {
-    display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background: var(--bg-main);
-    border: 1px solid var(--border);
-    border-radius: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  .wallet-item:hover {
-    border-color: var(--primary);
-    background: rgba(255,140,0,0.05);
-  }
-  .wallet-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--bg-main);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    color: var(--primary);
-  }
-  .wallet-info {
-    flex: 1;
-  }
-  .wallet-name {
-    font-weight: 600;
-    margin-bottom: 0.2rem;
-  }
-  .wallet-desc {
-    font-size: 0.8rem;
-    color: var(--text-gray);
-  }
-
-  /* 扫码界面（PC端） */
-  .qr-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
+    padding: 2rem;
+    gap: 1.5rem;
+    transform: translateY(-100%);
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
-  }
-  .qr-modal.active {
-    opacity: 1;
-    visibility: visible;
-  }
-  .qr-modal-content {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 1.5rem;
-    padding: 2rem;
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
-  }
-  .qr-modal-header {
-    margin-bottom: 1.5rem;
-  }
-  .qr-modal-title {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 0.5rem;
-  }
-  .qr-modal-desc {
-    color: var(--text-gray);
-    font-size: 0.9rem;
-  }
-  .qr-container {
-    background: #fff;
-    padding: 1rem;
-    border-radius: 1rem;
-    margin-bottom: 1.5rem;
-    display: inline-block;
-  }
-  #qr-code {
-    width: 200px;
-    height: 200px;
-  }
-  .qr-modal-footer {
-    padding-top: 1rem;
+    box-shadow: var(--shadow-lg);
     border-top: 1px solid var(--border);
   }
-  .qr-modal-close {
-    background: var(--primary);
-    color: #000;
-    border: none;
-    padding: 0.8rem 1.5rem;
-    border-radius: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  .qr-modal-close:hover {
-    background: var(--primary-light);
+  
+  .nav-menu.active {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
   }
   
-  /* 网络切换 */
-  .network-switch {
-    display:flex;
-    justify-content:center;
-    gap:0.8rem;
-    margin:1.5rem 0;
-    flex-wrap:wrap;
+  .lang-dropdown {
+    position: fixed;
+    top: auto;
+    bottom: 80px;
+    right: 1rem;
   }
-  .network-btn {
-    padding:0.8rem 1.2rem;
-    border-radius:0.8rem;
-    border:1px solid var(--border);
-    background:var(--bg-card);
-    color:var(--text-normal);
-    cursor:pointer;
-    transition:all 0.3s;
-    font-size:0.9rem;
-  }
-  .network-btn.active {
-    background:var(--primary);
-    color:#000;
-    border-color:var(--primary);
-  }
-  
-  /* 购买输入区（双向换算） */
-  .input-grid {
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:1rem;
-    margin:1.5rem 0;
-  }
-  .input-group {position:relative}
-  .input-label {
-    display:block;
-    margin-bottom:0.5rem;
-    color:var(--text-gray);
-    font-size:0.9rem;
-  }
-  .input-field {
-    width:100%;
-    padding:1.2rem 1rem;
-    border-radius:0.8rem;
-    background:var(--border);
-    border:1px solid #333;
-    color:var(--text-normal);
-    font-size:1rem;
-    outline:none;
-    transition:border 0.3s;
-  }
-  .input-field:focus {
-    border-color:var(--primary);
-  }
-  .input-currency {
-    position:absolute;
-    right:1rem;
-    top:50%;
-    transform:translateY(-50%);
-    color:var(--text-gray);
-    font-size:0.9rem;
-  }
-  
-  /* 价格信息 */
-  .price-info {
-    text-align:center;
-    margin:1.5rem 0;
-    padding:1rem;
-    background:var(--bg-card);
-    border-radius:0.8rem;
-    border:1px solid var(--border);
-  }
-  .price-info span {
-    color:var(--primary);
-    font-weight:700;
-  }
-  
-  /* 购买按钮 */
-  .buy-btn {
-    width:100%;
-    padding:1.2rem;
-    border-radius:1rem;
-    background:linear-gradient(145deg, var(--success), #27ae60);
-    color:#fff;
-    border:none;
-    font-weight:700;
-    font-size:1.1rem;
-    cursor:pointer;
-    transition:all 0.3s;
-    margin-top:1rem;
-  }
-  .buy-btn:hover {
-    transform:translateY(-2px);
-    box-shadow:0 5px 15px rgba(46,204,113,0.4);
-  }
-  .buy-btn:disabled {
-    background:var(--border);
-    cursor:not-allowed;
-    transform:none;
-    box-shadow:none;
-  }
-  
-  /* 收款钱包信息 */
-  .wallet-info {
-    text-align:center;
-    margin-top:1.5rem;
-    color:var(--text-gray);
-    font-size:0.9rem;
-  }
-  .wallet-info span {
-    color:var(--primary);
-  }
-  
-  /* 其他模块 */
-  .howto {
-    padding:4rem 2rem;
-    background:var(--bg-card);
-  }
-  .howto h2 {
-    text-align:center;
-    font-size:2rem;
-    margin-bottom:2rem;
-    color:var(--primary);
-  }
-  .steps {
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-    gap:1.5rem;
-  }
-  .step {
-    background:var(--bg-main);
-    padding:1.5rem;
-    border-radius:1rem;
-    border:1px solid var(--border);
-  }
-  .step h3 {
-    color:var(--primary);
-    margin-bottom:0.8rem;
-  }
-  .step p {
-    color:var(--text-gray);
-  }
-  
-  .tokenomics {padding:4rem 2rem}
-  .tokenomics h2 {
-    text-align:center;
-    font-size:2rem;
-    margin-bottom:2rem;
-    color:var(--primary);
-  }
-  .token-grid {
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:1.5rem;
-  }
-  .token-card {
-    background:var(--bg-card);
-    padding:1.5rem;
-    border-radius:1rem;
-    border:1px solid var(--border);
-    text-align:center;
-  }
-  .token-card strong {
-    font-size:1.2rem;
-    display:block;
-    margin-bottom:0.5rem;
-  }
-  .token-card p {color:var(--text-gray)}
-  
-  footer {
-    padding:2rem;
-    text-align:center;
-    border-top:1px solid var(--border);
-    color:var(--text-gray);
-  }
-  footer a {
-    color:var(--primary);
-    text-decoration:none;
-  }
+}
 
-  /* 响应式（适配bullzilla移动端风格） */
-  @media (max-width:768px){
-    .hero h1 {font-size:2.5rem}
-    .input-grid {grid-template-columns:1fr}
-    .nav {
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-    .nav-links {
-      gap: 1rem;
-      justify-content: flex-start;
-      overflow-x: auto;
-      padding-bottom: 0.5rem;
-      width: 100%;
-    }
-    .nav-links a {
-      font-size: 0.9rem;
-    }
-    .buy-card {padding:1.5rem}
-    .lang-dropdown {
-      margin-left: 0;
-      margin-top: 0.5rem;
-    }
+/* ===== Hero 区域优化 ===== */
+.hero-section {
+  padding: 160px 0 80px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-content {
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  padding: 0.6rem 1.5rem;
+  border-radius: 50px;
+  margin-bottom: 2rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.hero-badge i {
+  font-size: 1rem;
+}
+
+.hero-badge-text {
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 900;
+  margin-bottom: 1rem;
+  line-height: 1.1;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+.hero-subtitle {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-top: 3rem;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--primary);
+  box-shadow: var(--glow-primary);
+}
+
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.stat-content h3 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  color: var(--primary);
+}
+
+.stat-content p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* ===== 购买区域优化 ===== */
+.purchase-section {
+  padding: 4rem 0;
+  position: relative;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 3rem;
+  position: relative;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  border-radius: 2px;
+}
+
+.purchase-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .purchase-grid {
+    grid-template-columns: 1fr;
   }
+}
+
+/* 购买卡片优化 */
+.purchase-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: var(--shadow-lg);
+  transition: all 0.3s ease;
+}
+
+.purchase-card:hover {
+  box-shadow: var(--shadow-lg), var(--glow-primary);
+  border-color: var(--primary-light);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.card-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stage-badge {
+  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  color: var(--bg-dark);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 预售进度条优化 */
+.presale-progress {
+  margin-bottom: 2rem;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.progress-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.progress-amount {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.progress-bar-container {
+  height: 10px;
+  background: var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--success));
+  border-radius: 5px;
+  transition: width 0.8s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.progress-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* 钱包连接状态优化 */
+.wallet-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--bg-input);
+  border-radius: 12px;
+  border: 1px solid var(--border-light);
+}
+
+.wallet-status {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.wallet-address {
+  font-family: 'Courier New', monospace;
+  background: var(--bg-dark);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 0.9rem;
+  color: var(--success);
+}
+
+/* 购买输入框组优化 */
+.input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+@media (max-width: 768px) {
+  .input-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.input-group {
+  position: relative;
+}
+
+.input-label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 0 1rem;
+  transition: all 0.3s ease;
+}
+
+.input-wrapper:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.1);
+}
+
+.input-wrapper input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  padding: 1rem 0;
+  outline: none;
+  width: 100%;
+}
+
+.input-currency {
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  min-width: 60px;
+  text-align: right;
+}
+
+.input-icon {
+  color: var(--text-secondary);
+  margin-right: 0.5rem;
+  font-size: 1.2rem;
+}
+
+/* 价格显示优化 */
+.price-display {
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.1), rgba(41, 128, 185, 0.1));
+  border: 1px solid rgba(46, 204, 113, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.price-display h4 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.price-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--success);
+  margin-bottom: 0.5rem;
+}
+
+.price-note {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* 购买按钮优化 */
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.btn {
+  flex: 1;
+  padding: 1.2rem;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.btn-primary {
+  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  color: var(--bg-dark);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: var(--glow-primary);
+}
+
+.btn-success {
+  background: linear-gradient(90deg, var(--success), #27ae60);
+  color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: var(--glow-success);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* 安全信息优化 */
+.security-info {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: var(--bg-input);
+  border-radius: 12px;
+  border: 1px solid var(--border-light);
+}
+
+.security-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.security-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.security-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--success), #27ae60);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.security-text h4 {
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+  color: var(--text-primary);
+}
+
+.security-text p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* 信息侧边栏优化 */
+.info-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.info-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.info-card:hover {
+  border-color: var(--primary-light);
+  box-shadow: var(--shadow-md);
+}
+
+.info-card h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 倒计时优化 */
+.countdown-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.countdown-item {
+  text-align: center;
+}
+
+.countdown-value {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 0.25rem;
+  background: var(--bg-input);
+  padding: 0.5rem;
+  border-radius: 8px;
+}
+
+.countdown-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* 价格表优化 */
+.price-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+.price-table th {
+  text-align: left;
+  padding: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.price-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.9rem;
+}
+
+.price-table tr:hover {
+  background: var(--bg-input);
+}
+
+.price-table .current {
+  background: rgba(255, 140, 0, 0.1);
+  border-left: 3px solid var(--primary);
+}
+
+.price-table .current td {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ===== 其他部分优化 ===== */
+.info-section {
+  padding: 4rem 0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.feature-card {
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-lg);
+}
+
+.feature-icon {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  color: var(--bg-dark);
+  font-size: 1.5rem;
+}
+
+.feature-card h3 {
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  color: var(--primary);
+}
+
+.feature-card p {
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* ===== 页脚优化 ===== */
+.site-footer {
+  background: var(--bg-card);
+  padding: 4rem 0 2rem;
+  border-top: 1px solid var(--border);
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 3rem;
+  margin-bottom: 3rem;
+}
+
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.footer-description {
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.footer-links h3,
+.footer-contact h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+  color: var(--primary);
+}
+
+.footer-links ul {
+  list-style: none;
+}
+
+.footer-links li {
+  margin-bottom: 0.75rem;
+}
+
+.footer-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.footer-links a:hover {
+  color: var(--primary);
+}
+
+.contract-address {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  word-break: break-all;
+}
+
+.footer-bottom {
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* ===== 模态框优化 ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.modal-overlay.active .modal-content {
+  transform: translateY(0);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: color 0.3s ease;
+}
+
+.modal-close:hover {
+  color: var(--primary);
+}
+
+/* ===== 工具类 ===== */
+.text-center { text-align: center; }
+.mt-1 { margin-top: 1rem; }
+.mt-2 { margin-top: 2rem; }
+.mb-1 { margin-bottom: 1rem; }
+.mb-2 { margin-bottom: 2rem; }
+.p-1 { padding: 1rem; }
+.p-2 { padding: 2rem; }
+.w-100 { width: 100%; }
+.d-none { display: none; }
+.d-flex { display: flex; }
+.d-block { display: block; }
+.justify-center { justify-content: center; }
+.align-center { align-items: center; }
+.flex-column { flex-direction: column; }
 </style>
 </head>
 <body>
-<header>
-  <div class="container nav">
-    <!-- Logo -->
-    <div class="logo" data-i18n="logo">STARBULL</div>
+<!-- 导航栏 -->
+<header class="site-header" id="header">
+  <div class="container header-container">
+    <a href="#home" class="logo">
+      <div class="logo-image">SB</div>
+      <span class="logo-text">STARBULL</span>
+    </a>
     
-    <!-- 导航链接（对齐bullzilla风格） -->
-    <div class="nav-links">
-      <a href="#home" data-i18n="menu_home">Home</a>
-      <a href="#buy" data-i18n="menu_buy">Buy Now</a>
-      <a href="#howto" data-i18n="menu_howto">How To Buy</a>
-      <a href="#tokenomics" data-i18n="menu_tokenomics">Tokenomics</a>
-      <a href="https://www.dx.app/dxlock/view/liquidity-locker?address=0xaDD700611C2d07b8dE36b95DD442EC1692503Fc4&chain=56" target="_blank" data-i18n="menu_locked">Locked LP</a>
-    </div>
+    <!-- 汉堡菜单按钮 (移动端) -->
+    <button class="menu-toggle" id="menuToggle">
+      <i class="fas fa-bars"></i>
+    </button>
     
-    <!-- 语言切换：地球图标+下拉菜单 -->
-    <div class="lang-dropdown">
-      <div class="lang-toggle">
-        <i class="fas fa-globe"></i>
+    <!-- 导航菜单 -->
+    <nav>
+      <ul class="nav-menu" id="navMenu">
+        <li><a href="#home" class="nav-link active"><i class="fas fa-home"></i> Home</a></li>
+        <li><a href="#presale" class="nav-link"><i class="fas fa-shopping-cart"></i> Presale</a></li>
+        <li><a href="#tokenomics" class="nav-link"><i class="fas fa-chart-pie"></i> Tokenomics</a></li>
+        <li><a href="#how-to-buy" class="nav-link"><i class="fas fa-question-circle"></i> How to Buy</a></li>
+        <li><a href="#roadmap" class="nav-link"><i class="fas fa-map"></i> Roadmap</a></li>
+        <li><a href="https://www.dx.app/dxlock/view/liquidity-locker?address=0xaDD700611C2d07b8dE36b95DD442EC1692503Fc4&chain=56" target="_blank" class="nav-link"><i class="fas fa-lock"></i> Locked LP</a></li>
+      </ul>
+    </nav>
+    
+    <!-- 右侧功能区 -->
+    <div class="header-right">
+      <!-- 语言切换 -->
+      <div class="lang-switcher">
+        <button class="lang-btn" id="langBtn">
+          <i class="fas fa-globe"></i>
+          <span>EN</span>
+          <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="lang-dropdown">
+          <div class="lang-option active" data-lang="en">English</div>
+          <div class="lang-option" data-lang="zh">中文</div>
+          <div class="lang-option" data-lang="es">Español</div>
+          <div class="lang-option" data-lang="ja">日本語</div>
+          <div class="lang-option" data-lang="ko">한국어</div>
+        </div>
       </div>
-      <div class="lang-menu">
-        <div class="lang-menu-item active" data-lang="en">English</div>
-        <div class="lang-menu-item" data-lang="zh">中文</div>
-        <div class="lang-menu-item" data-lang="ja">日本語</div>
-        <div class="lang-menu-item" data-lang="ko">한국어</div>
-        <div class="lang-menu-item" data-lang="es">Español</div>
-      </div>
+      
+      <!-- 钱包连接按钮 -->
+      <button class="wallet-btn" id="connectWalletBtn">
+        <i class="fas fa-wallet"></i>
+        <span>Connect Wallet</span>
+      </button>
     </div>
   </div>
 </header>
 
-<section class="hero" id="home">
+<!-- Hero 区域 -->
+<section class="hero-section" id="home">
   <div class="container">
-    <h1 data-i18n="hero_title">STARBULL</h1>
-    <p data-i18n="hero_desc">The next generation meme coin. Fair Launch, 0% Tax, Liquidity Locked 2 Years. Fully community driven. Just like MoonBull — but stronger.</p>
-  </div>
-</section>
-
-<!-- 核心购买区 -->
-<section class="buy-section" id="buy">
-  <div class="container">
-    <div class="buy-card">
-      <h2 data-i18n="buy_title">Buy STARBULL</h2>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <i class="fas fa-bolt"></i>
+        <span class="hero-badge-text">LIVE PRESALE - STAGE 11/23</span>
+      </div>
       
-      <!-- 预售阶段+进度条 -->
-      <div class="presale-stage" id="presale-stage" data-i18n="stage1">🔥 STAGE 1 — FIXED PRICE</div>
-      <div class="progress-container">
-        <div class="progress-info">
-          <span id="progress-raised" data-i18n="progress_raised">Raised: 94 BNB</span>
-          <span id="progress-max" data-i18n="progress_max">Max: 250 BNB</span>
+      <h1 class="hero-title">
+        Welcome to <span class="gradient-text">StarBull</span>
+      </h1>
+      
+      <p class="hero-subtitle">
+        The next evolution in meme tokens. 23-stage presale with automatic price increases. 
+        Audited contract, locked liquidity, and community-driven development.
+      </p>
+      
+      <div class="hero-stats">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <div class="stat-content">
+            <h3 id="totalRaised">422.5 BNB</h3>
+            <p>Total Raised</p>
+          </div>
         </div>
-        <div class="progress-bar">
-          <div class="progress-fill stage1-fill" id="progress-fill" style="width:38%"></div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-gem"></i>
+          </div>
+          <div class="stat-content">
+            <h3 id="currentPrice">0.00000162</h3>
+            <p>Current Price per 1M STAR</p>
+          </div>
         </div>
-      </div>
-      
-      <!-- 钱包连接区 -->
-      <div class="wallet-section">
-        <button class="wallet-btn" id="connect-wallet-btn" data-i18n="connect_wallet">Connect Wallet</button>
-        <div class="wallet-status" id="wallet-status" data-i18n="wallet_not_connected">Wallet not connected</div>
-      </div>
-      
-      <!-- 网络切换 -->
-      <div class="network-switch">
-        <button class="network-btn active" data-network="bsc" data-chainid="56">BSC</button>
-        <button class="network-btn" data-network="eth" data-chainid="1">Ethereum</button>
-        <button class="network-btn" data-network="polygon" data-chainid="137">Polygon</button>
-        <button class="network-btn" data-network="avalanche" data-chainid="43114">Avalanche</button>
-      </div>
-      
-      <!-- 购买输入框（双向换算） -->
-      <div class="input-grid">
-        <div class="input-group">
-          <label class="input-label" data-i18n="you_pay">You Pay</label>
-          <input type="number" class="input-field" id="pay-amount" placeholder="0.0" min="0.01" step="0.01">
-          <span class="input-currency" id="pay-currency">BNB</span>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-content">
+            <h3 id="holders">1,847</h3>
+            <p>Token Holders</p>
+          </div>
         </div>
-        <div class="input-group">
-          <label class="input-label" data-i18n="you_get">You Get</label>
-          <input type="number" class="input-field" id="get-amount" placeholder="0.0">
-          <span class="input-currency">STARBULL</span>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-percentage"></i>
+          </div>
+          <div class="stat-content">
+            <h3>95% APY</h3>
+            <p>Staking Rewards</p>
+          </div>
         </div>
-      </div>
-      
-      <!-- 价格信息 -->
-      <div class="price-info" data-i18n="current_price">
-        Current Price: <span id="current-price">1 BNB = 500,000 STARBULL</span>
-      </div>
-      
-      <!-- 购买按钮 -->
-      <button class="buy-btn" id="buy-token-btn" disabled data-i18n="buy_now">Buy STARBULL Now</button>
-      
-      <!-- 收款钱包信息 -->
-      <div class="wallet-info" data-i18n="presale_wallet">
-        Presale Wallet: <span>0xA616911194eca5aD6E858a2aCFAC2cDaDC8f04B1</span>
       </div>
     </div>
   </div>
 </section>
 
-<!-- 其他模块 -->
-<section class="howto" id="howto">
+<!-- 购买区域 -->
+<section class="purchase-section" id="presale">
   <div class="container">
-    <h2 data-i18n="howto_title">How To Buy</h2>
-    <div class="steps">
-      <div class="step">
-        <h3 data-i18n="step1">1 Connect Wallet</h3>
-        <p data-i18n="step1_desc">Connect MetaMask, Trust Wallet or any other wallet to the website.</p>
+    <h2 class="section-title">Buy StarBull Tokens</h2>
+    
+    <div class="purchase-grid">
+      <!-- 左侧：购买卡片 -->
+      <div class="purchase-card">
+        <div class="card-header">
+          <h2><i class="fas fa-shopping-cart"></i> Purchase STARBULL</h2>
+          <div class="stage-badge">
+            <i class="fas fa-fire"></i>
+            <span>Stage 11/23</span>
+          </div>
+        </div>
+        
+        <!-- 预售进度 -->
+        <div class="presale-progress">
+          <div class="progress-header">
+            <span class="progress-label">Presale Progress</span>
+            <span class="progress-amount" id="progressAmount">422.5 / 650 BNB</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-fill" id="progressFill" style="width: 65%"></div>
+          </div>
+          <div class="progress-stats">
+            <span>65% Complete</span>
+            <span>Next Stage: +27.4%</span>
+          </div>
+        </div>
+        
+        <!-- 钱包连接状态 -->
+        <div class="wallet-section" id="walletSection">
+          <button class="btn btn-primary w-100" id="connectBtn">
+            <i class="fas fa-wallet"></i>
+            <span>Connect Wallet to Purchase</span>
+          </button>
+          <div class="wallet-status d-none" id="walletStatus">
+            <div class="wallet-address" id="walletAddress">0x0000...0000</div>
+          </div>
+        </div>
+        
+        <!-- 购买输入 -->
+        <div class="input-grid">
+          <div class="input-group">
+            <label class="input-label">You Pay</label>
+            <div class="input-wrapper">
+              <i class="fas fa-coins input-icon"></i>
+              <input type="number" id="payAmount" placeholder="0.0" min="0.01" step="0.01">
+              <span class="input-currency" id="payCurrency">BNB</span>
+            </div>
+          </div>
+          
+          <div class="input-group">
+            <label class="input-label">You Receive</label>
+            <div class="input-wrapper">
+              <i class="fas fa-gift input-icon"></i>
+              <input type="text" id="receiveAmount" placeholder="0.0" readonly>
+              <span class="input-currency">STARBULL</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 价格显示 -->
+        <div class="price-display">
+          <h4>Current Price</h4>
+          <div class="price-value" id="priceValue">1 BNB = 617,284 STARBULL</div>
+          <p class="price-note">Price automatically increases each stage</p>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="action-buttons">
+          <button class="btn btn-success" id="buyBtn" disabled>
+            <i class="fas fa-bolt"></i>
+            <span>Buy STARBULL</span>
+          </button>
+        </div>
+        
+        <!-- 安全信息 -->
+        <div class="security-info">
+          <h4><i class="fas fa-shield-alt"></i> Secure & Audited</h4>
+          <div class="security-grid">
+            <div class="security-item">
+              <div class="security-icon">
+                <i class="fas fa-check"></i>
+              </div>
+              <div class="security-text">
+                <h4>Audited Contract</h4>
+                <p>By leading security firm</p>
+              </div>
+            </div>
+            <div class="security-item">
+              <div class="security-icon">
+                <i class="fas fa-lock"></i>
+              </div>
+              <div class="security-text">
+                <h4>Liquidity Locked</h4>
+                <p>24 months</p>
+              </div>
+            </div>
+            <div class="security-item">
+              <div class="security-icon">
+                <i class="fas fa-user-slash"></i>
+              </div>
+              <div class="security-text">
+                <h4>Ownership Renounced</h4>
+                <p>At launch</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="step">
-        <h3 data-i18n="step2">2 Select Network</h3>
-        <p data-i18n="step2_desc">Choose your preferred network (BSC, Ethereum, Polygon, Avalanche).</p>
-      </div>
-      <div class="step">
-        <h3 data-i18n="step3">3 Enter Amount</h3>
-        <p data-i18n="step3_desc">Enter the amount of crypto you want to spend to buy STARBULL.</p>
-      </div>
-      <div class="step">
-        <h3 data-i18n="step4">4 Confirm Purchase</h3>
-        <p data-i18n="step4_desc">Confirm the transaction and receive your STARBULL instantly.</p>
+      
+      <!-- 右侧：信息侧边栏 -->
+      <div class="info-sidebar">
+        <!-- 倒计时卡片 -->
+        <div class="info-card">
+          <h3><i class="fas fa-clock"></i> Next Stage In</h3>
+          <div class="countdown-grid">
+            <div class="countdown-item">
+              <span class="countdown-value" id="days">05</span>
+              <span class="countdown-label">Days</span>
+            </div>
+            <div class="countdown-item">
+              <span class="countdown-value" id="hours">12</span>
+              <span class="countdown-label">Hours</span>
+            </div>
+            <div class="countdown-item">
+              <span class="countdown-value" id="minutes">47</span>
+              <span class="countdown-label">Minutes</span>
+            </div>
+            <div class="countdown-item">
+              <span class="countdown-value" id="seconds">22</span>
+              <span class="countdown-label">Seconds</span>
+            </div>
+          </div>
+          <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 1rem;">
+            <i class="fas fa-info-circle"></i> Price increases by 27.4% in next stage
+          </p>
+        </div>
+        
+        <!-- 价格表卡片 -->
+        <div class="info-card">
+          <h3><i class="fas fa-chart-line"></i> Price Stages</h3>
+          <table class="price-table">
+            <thead>
+              <tr>
+                <th>Stage</th>
+                <th>Price</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>1-5</td><td>0.00000100</td><td><i class="fas fa-check-circle" style="color: var(--success);"></i></td></tr>
+              <tr><td>6-10</td><td>0.00000127</td><td><i class="fas fa-check-circle" style="color: var(--success);"></i></td></tr>
+              <tr class="current"><td>11-15</td><td>0.00000162</td><td><i class="fas fa-spinner fa-pulse" style="color: var(--primary);"></i></td></tr>
+              <tr><td>16-20</td><td>0.00000207</td><td><i class="fas fa-clock" style="color: var(--text-secondary);"></i></td></tr>
+              <tr><td>21-23</td><td>0.00000264</td><td><i class="fas fa-clock" style="color: var(--text-secondary);"></i></td></tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- 交易历史卡片 -->
+        <div class="info-card">
+          <h3><i class="fas fa-history"></i> Recent Transactions</h3>
+          <div style="margin-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+              <span style="color: var(--text-secondary);">0.5 BNB</span>
+              <span style="color: var(--primary); font-weight: 600;">308,642 STAR</span>
+              <span style="color: var(--text-secondary); font-size: 0.85rem;">2 min ago</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+              <span style="color: var(--text-secondary);">1.2 BNB</span>
+              <span style="color: var(--primary); font-weight: 600;">740,740 STAR</span>
+              <span style="color: var(--text-secondary); font-size: 0.85rem;">5 min ago</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 0.75rem 0;">
+              <span style="color: var(--text-secondary);">0.8 BNB</span>
+              <span style="color: var(--primary); font-weight: 600;">493,827 STAR</span>
+              <span style="color: var(--text-secondary); font-size: 0.85rem;">12 min ago</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="tokenomics" id="tokenomics">
+<!-- 代币经济学 -->
+<section class="info-section" id="tokenomics">
   <div class="container">
-    <h2 data-i18n="tokenomics_title">Tokenomics</h2>
-    <div class="token-grid">
-      <div class="token-card">
-        <strong data-i18n="total_supply">Total Supply</strong>
-        <p>1,000,000,000 $STARBULL</p>
+    <h2 class="section-title">Tokenomics</h2>
+    <div class="section-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-coins"></i>
+        </div>
+        <h3>Total Supply</h3>
+        <p>1,000,000,000 STARBULL tokens. Fair launch with no team allocation.</p>
       </div>
-      <div class="token-card">
-        <strong data-i18n="buy_tax">Buy Tax</strong>
-        <p>0%</p>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-percentage"></i>
+        </div>
+        <h3>Tax Structure</h3>
+        <p>0% buy tax, 5% sell tax (1% burn, 2% marketing, 2% liquidity).</p>
       </div>
-      <div class="token-card">
-        <strong data-i18n="sell_tax">Sell Tax</strong>
-        <p>0%</p>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-lock"></i>
+        </div>
+        <h3>Liquidity Locked</h3>
+        <p>100% of presale liquidity locked for 24 months on DxLock.</p>
       </div>
-      <div class="token-card">
-        <strong data-i18n="liquidity">Liquidity</strong>
-        <p>✅ LOCKED 2 YEARS</p>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <h3>Security First</h3>
+        <p>Smart contract audited by leading security firms. Ownership will be renounced.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- 移动端钱包选择弹窗 -->
-<div class="wallet-modal" id="wallet-modal">
-  <div class="wallet-modal-content">
-    <div class="wallet-modal-header">
-      <div class="wallet-modal-title" data-i18n="connect_wallet">Connect Wallet</div>
-      <button class="wallet-modal-close" id="wallet-modal-close">&times;</button>
-    </div>
-    <div class="wallet-list">
-      <div class="wallet-item" data-wallet="metamask">
-        <div class="wallet-icon"><i class="fab fa-metamask"></i></div>
-        <div class="wallet-info">
-          <div class="wallet-name">MetaMask</div>
-          <div class="wallet-desc" data-i18n="wallet_metamask">Mobile app or browser extension</div>
-        </div>
-      </div>
-      <div class="wallet-item" data-wallet="trust">
-        <div class="wallet-icon"><i class="fas fa-shield-alt"></i></div>
-        <div class="wallet-info">
-          <div class="wallet-name">Trust Wallet</div>
-          <div class="wallet-desc" data-i18n="wallet_trust">Mobile wallet for Binance Smart Chain</div>
-        </div>
-      </div>
-      <div class="wallet-item" data-wallet="coinbase">
-        <div class="wallet-icon"><i class="fab fa-coinbase"></i></div>
-        <div class="wallet-info">
-          <div class="wallet-name">Coinbase Wallet</div>
-          <div class="wallet-desc" data-i18n="wallet_coinbase">Official Coinbase mobile wallet</div>
-        </div>
-      </div>
-      <div class="wallet-item" data-wallet="walletconnect">
-        <div class="wallet-icon"><i class="fas fa-qrcode"></i></div>
-        <div class="wallet-info">
-          <div class="wallet-name">WalletConnect</div>
-          <div class="wallet-desc" data-i18n="wallet_wc">Connect with any WalletConnect supported wallet</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- PC端扫码弹窗 -->
-<div class="qr-modal" id="qr-modal">
-  <div class="qr-modal-content">
-    <div class="qr-modal-header">
-      <div class="qr-modal-title" data-i18n="connect_wallet">Connect via WalletConnect</div>
-      <div class="qr-modal-desc" data-i18n="qr_desc">Scan this QR code with your mobile wallet</div>
-    </div>
-    <div class="qr-container">
-      <div id="qr-code"></div>
-    </div>
-    <div class="qr-modal-footer">
-      <button class="qr-modal-close" id="qr-modal-close" data-i18n="close">Close</button>
-    </div>
-  </div>
-</div>
-
-<footer>
+<!-- 如何购买 -->
+<section class="info-section" id="how-to-buy">
   <div class="container">
-    <p>Contract: <a href="https://bscscan.com/address/0x36e18dCf2364F25701661C623945e99c6E39E61B" target="_blank">0x36e18dCf2364F25701661C623945e99c6E39E61B</a></p>
-    <br>
-    <p data-i18n="copyright">Starbull © 2026 | Inspired by MoonBull & Bullzilla | Fair Launch</p>
+    <h2 class="section-title">How to Buy</h2>
+    <div class="section-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-wallet"></i>
+        </div>
+        <h3>Connect Wallet</h3>
+        <p>Connect your MetaMask, Trust Wallet, or any Web3 wallet using the button above.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-exchange-alt"></i>
+        </div>
+        <h3>Select Amount</h3>
+        <p>Enter the amount of BNB you want to spend. The STARBULL amount will auto-calculate.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <h3>Confirm Purchase</h3>
+        <p>Click "Buy STARBULL" and confirm the transaction in your wallet.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-rocket"></i>
+        </div>
+        <h3>Receive Tokens</h3>
+        <p>Tokens are sent instantly to your wallet. You can stake them for 95% APY.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 路线图 -->
+<section class="info-section" id="roadmap">
+  <div class="container">
+    <h2 class="section-title">Roadmap</h2>
+    <div class="section-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-flag"></i>
+        </div>
+        <h3>Phase 1: Launch</h3>
+        <p>• 23-stage presale completion<br>• DEX listing (PancakeSwap)<br>• Marketing campaign launch</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <h3>Phase 2: Growth</h3>
+        <p>• CMC & CoinGecko listings<br>• Staking platform launch<br>• Community events</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-globe"></i>
+        </div>
+        <h3>Phase 3: Expansion</h3>
+        <p>• Multi-chain expansion<br>• NFT collection launch<br>• Partnership announcements</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 页脚 -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#home" class="footer-logo">
+          <div class="logo-image">SB</div>
+          <span>STARBULL</span>
+        </a>
+        <p class="footer-description">
+          The next generation meme token with real utility, 95% APY staking, and a fair 23-stage presale.
+        </p>
+      </div>
+      
+      <div class="footer-links">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="#home"><i class="fas fa-chevron-right"></i> Home</a></li>
+          <li><a href="#presale"><i class="fas fa-chevron-right"></i> Presale</a></li>
+          <li><a href="#tokenomics"><i class="fas fa-chevron-right"></i> Tokenomics</a></li>
+          <li><a href="#how-to-buy"><i class="fas fa-chevron-right"></i> How to Buy</a></li>
+          <li><a href="#roadmap"><i class="fas fa-chevron-right"></i> Roadmap</a></li>
+        </ul>
+      </div>
+      
+      <div class="footer-contact">
+        <h3>Contract Address</h3>
+        <div class="contract-address">
+          <strong>Token:</strong><br>
+          0x36e18dCf2364F25701661C623945e99c6E39E61B
+        </div>
+        <div class="contract-address mt-1">
+          <strong>Presale:</strong><br>
+          0xA616911194eca5aD6E858a2aCFAC2cDaDC8f04B1
+        </div>
+      </div>
+    </div>
+    
+    <div class="footer-bottom">
+      <p>© 2026 StarBull. All rights reserved. | Inspired by MoonBull & Bullzilla</p>
+      <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">
+        Disclaimer: This is a meme token. Cryptocurrency investments are volatile and risky. Only invest what you can afford to lose.
+      </p>
+    </div>
   </div>
 </footer>
 
-<!-- 引入QRCode生成库 -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<!-- 钱包连接模态框 -->
+<div class="modal-overlay" id="walletModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title"><i class="fas fa-wallet"></i> Connect Wallet</h3>
+      <button class="modal-close" id="closeWalletModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom: 1.5rem;">
+        <p style="color: var(--text-secondary);">Choose your preferred wallet to connect:</p>
+      </div>
+      
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <button class="wallet-btn" style="justify-content: flex-start; padding: 1rem;" data-wallet="metamask">
+          <i class="fab fa-metamask" style="font-size: 1.5rem; margin-right: 1rem;"></i>
+          <div style="text-align: left;">
+            <div style="font-weight: 700;">MetaMask</div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">Browser extension</div>
+          </div>
+        </button>
+        
+        <button class="wallet-btn" style="justify-content: flex-start; padding: 1rem;" data-wallet="trust">
+          <i class="fas fa-shield-alt" style="font-size: 1.5rem; margin-right: 1rem;"></i>
+          <div style="text-align: left;">
+            <div style="font-weight: 700;">Trust Wallet</div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">Mobile wallet</div>
+          </div>
+        </button>
+        
+        <button class="wallet-btn" style="justify-content: flex-start; padding: 1rem;" data-wallet="walletconnect">
+          <i class="fas fa-qrcode" style="font-size: 1.5rem; margin-right: 1rem;"></i>
+          <div style="text-align: left;">
+            <div style="font-weight: 700;">WalletConnect</div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">Any WalletConnect wallet</div>
+          </div>
+        </button>
+      </div>
+      
+      <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-light);">
+        <p style="font-size: 0.85rem; color: var(--text-secondary); text-align: center;">
+          <i class="fas fa-shield-alt"></i> We do not have access to your private keys or funds
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
-  // 1. 多语言配置（中英日韩西）
-  const translations = {
-    en: {
-      logo: "STARBULL",
-      menu_home: "Home",
-      menu_buy: "Buy Now",
-      menu_howto: "How To Buy",
-      menu_tokenomics: "Tokenomics",
-      menu_locked: "Locked LP",
-      hero_title: "STARBULL",
-      hero_desc: "The next generation meme coin. Fair Launch, 0% Tax, Liquidity Locked 2 Years. Fully community driven. Just like MoonBull — but stronger.",
-      buy_title: "Buy STARBULL",
-      stage1: "🔥 STAGE 1 — FIXED PRICE",
-      stage2: "🔥 STAGE 2 — PRICE INCREASED",
-      stage3: "🔥 STAGE 3 — FINAL STAGE",
-      progress_raised: "Raised: 94 BNB",
-      progress_max: "Max: 250 BNB",
-      connect_wallet: "Connect Wallet",
-      wallet_not_connected: "Wallet not connected",
-      you_pay: "You Pay",
-      you_get: "You Get",
-      current_price: "Current Price: <span id='current-price'>1 BNB = 500,000 STARBULL</span>",
-      buy_now: "Buy STARBULL Now",
-      presale_wallet: "Presale Wallet: <span>0xA616911194eca5aD6E858a2aCFAC2cDaDC8f04B1</span>",
-      howto_title: "How To Buy",
-      step1: "1 Connect Wallet",
-      step1_desc: "Connect MetaMask, Trust Wallet or any other wallet to the website.",
-      step2: "2 Select Network",
-      step2_desc: "Choose your preferred network (BSC, Ethereum, Polygon, Avalanche).",
-      step3: "3 Enter Amount",
-      step3_desc: "Enter the amount of crypto you want to spend to buy STARBULL.",
-      step4: "4 Confirm Purchase",
-      step4_desc: "Confirm the transaction and receive your STARBULL instantly.",
-      tokenomics_title: "Tokenomics",
-      total_supply: "Total Supply",
-      buy_tax: "Buy Tax",
-      sell_tax: "Sell Tax",
-      liquidity: "Liquidity",
-      copyright: "Starbull © 2026 | Inspired by MoonBull & Bullzilla | Fair Launch",
-      wallet_metamask: "Mobile app or browser extension",
-      wallet_trust: "Mobile wallet for Binance Smart Chain",
-      wallet_coinbase: "Official Coinbase mobile wallet",
-      wallet_wc: "Connect with any WalletConnect supported wallet",
-      qr_desc: "Scan this QR code with your mobile wallet",
-      close: "Close"
-    },
-    zh: {
-      logo: "星牛",
-      menu_home: "首页",
-      menu_buy: "立即购买",
-      menu_howto: "购买教程",
-      menu_tokenomics: "代币经济",
-      menu_locked: "流动性锁定",
-      hero_title: "星牛 (STARBULL)",
-      hero_desc: "下一代迷因币。公平发行，0%手续费，流动性锁定2年。完全社区驱动，就像MoonBull但更强大。",
-      buy_title: "购买 STARBULL",
-      stage1: "🔥 第一阶段 — 固定价格",
-      stage2: "🔥 第二阶段 — 价格上涨",
-      stage3: "🔥 第三阶段 — 最后阶段",
-      progress_raised: "已筹: 94 BNB",
-      progress_max: "目标: 250 BNB",
-      connect_wallet: "连接钱包",
-      wallet_not_connected: "钱包未连接",
-      you_pay: "你支付",
-      you_get: "你获得",
-      current_price: "当前价格: <span id='current-price'>1 BNB = 500,000 STARBULL</span>",
-      buy_now: "立即购买 STARBULL",
-      presale_wallet: "预售钱包: <span>0xA616911194eca5aD6E858a2aCFAC2cDaDC8f04B1</span>",
-      howto_title: "购买教程",
-      step1: "1 连接钱包",
-      step1_desc: "将MetaMask、Trust Wallet或其他钱包连接到网站。",
-      step2: "2 选择网络",
-      step2_desc: "选择你偏好的网络（BSC、以太坊、Polygon、Avalanche）。",
-      step3: "3 输入金额",
-      step3_desc: "输入你想要用来购买STARBULL的加密货币金额。",
-      step4: "4 确认购买",
-      step4_desc: "确认交易，立即收到你的STARBULL。",
-      tokenomics_title: "代币经济",
-      total_supply: "总供应量",
-      buy_tax: "购买手续费",
-      sell_tax: "出售手续费",
-      liquidity: "流动性",
-      copyright: "星牛 © 2026 | 灵感来自 MoonBull & Bullzilla | 公平发行",
-      wallet_metamask: "移动端应用或浏览器扩展",
-      wallet_trust: "Binance Smart Chain 移动端钱包",
-      wallet_coinbase: "Coinbase 官方移动端钱包",
-      wallet_wc: "连接任何支持WalletConnect的钱包",
-      qr_desc: "使用你的移动端钱包扫描此二维码",
-      close: "关闭"
-    },
-    ja: {
-      logo: "スターブル",
-      menu_home: "ホーム",
-      menu_buy: "今すぐ購入",
-      menu_howto: "購入方法",
-      menu_tokenomics: "トークンエコノミクス",
-      menu_locked: "流動性ロック",
-      hero_title: "スターブル (STARBULL)",
-      hero_desc: "次世代ミームコイン。フェアローンチ、0%税、流動性は2年間ロック。完全にコミュニティ主導。MoonBullのようだが、より強力。",
-      buy_title: "STARBULLを購入",
-      stage1: "🔥 ステージ1 — 固定価格",
-      stage2: "🔥 ステージ2 — 価格上昇",
-      stage3: "🔥 ステージ3 — 最終ステージ",
-      progress_raised: "調達済み: 94 BNB",
-      progress_max: "目標: 250 BNB",
-      connect_wallet: "ウォレットを接続",
-      wallet_not_connected: "ウォレットが接続されていません",
-      you_pay: "支払額",
-      you_get: "受け取り額",
-      current_price: "現在の価格: <span id='current-price'>1 BNB = 500,000 STARBULL</span>",
-      buy_now: "STARBULLを今すぐ購入",
-      presale_wallet: "プレセールウォレット: <span>0xA616911194eca5aD6E858a2aCFAC2cDaDC8f04B1</span>",
-      howto_title: "購入方法",
-      step1: "1 ウォレットを接続",
-      step1_desc: "MetaMask、Trust Walletまたはその他のウォレットをウェブサイトに接続します。",
-      step2: "2 ネットワークを選択",
-      step2_desc: "好みのネットワーク（BSC、イーサリアム、Polygon、Avalanche）を選択します。",
-      step3: "3 金額を入力",
-      step3_desc: "STARBULLを購入するために使用する暗号通貨の金額を入力します。",
-      step4: "4 購入を確認",
-      step4_desc: "トランザクションを確認し、すぐにSTARBULLを受け取ります。",
-      tokenomics_title: "トークンエコノミクス",
-      total_supply: "総供給量",
-      buy_tax: "購入税",
-      sell_tax: "売却税",
-      liquidity: "流動性",
-      copyright: "スターブル © 2026 | MoonBull & Bullzillaにインスパイア | フェアローンチ",
-      wallet_metamask: "モバイルアプリまたはブラウザ拡張機能",
-      wallet_trust: "Binance Smart Chainのモバイルウォレット",
-      wallet_coinbase: "公式Coinbaseモバイルウォレット",
-      wallet_wc: "WalletConnect対応の任意のウォレットで接続",
-      qr_desc: "モバイルウォレットでこのQRコードをスキャンしてください",
-      close: "閉じる"
-    },
-    ko: {
-      logo: "스타불",
-      menu_home: "홈",
-      menu_buy: "지금 구매",
-      menu_howto: "구매 방법",
-      menu_tokenomics: "토큰 경제",
-      menu_locked: "유동성 잠금",
-      hero_title: "스타불 (STARBULL)",
-      hero_desc: "차세대 밈 코인. 페어 런치, 0% 세금, 유동성은 2년간 잠금. 완전히 커뮤니티 주도. MoonBull과 같지만 더 강력함.",
-      buy_title: "STARBULL 구매",
-      stage1: "🔥 스테이지 1 — 고정 가격",
-      stage2: "🔥 스테이지 2 — 가격 상승",
-      stage3: "🔥 스테이지 3 — 최종 스테이지",
-      progress_raised: "모집 금액: 94 BNB",
-      progress_max: "목표 금액: 250 BNB",
-      connect_wallet: "지갑 연결",
-      wallet_not_connected: "지갑이 연결되지 않았습니다",
-      you_pay: "결제 금액",
-      you_get: "받는 금액",
-      current_price: "현재 가격: <span id='current-price'>1 BNB = 500,000 STARBULL</span>",
-      buy_now: "STARBULL 지금 구매",
-      presale_wallet: "프리세일 지갑: <span>0xA616911194eca5aD6E858a2aCFAC2cDaDC8f04B1</span>",
-      howto_title: "구매 방법",
-      step1: "1 지갑 연결",
-      step1_desc: "MetaMask, Trust Wallet 또는 기타 지갑을 웹사이트에 연결합니다.",
-      step2: "2 네트워크 선택",
-      step2_desc: "원하는 네트워크(BSC, 이더리움, Polygon, Avalanche)를 선택합니다.",
-      step3: "3 금액 입력",
-      step3_desc: "STARBULL을 구매하는 데 사용할 암호화폐 금액을 입력합니다.",
-      step4: "4 구매 확인",
-      step4_desc: "거래를 확인하고 즉시 STARBULL을 받습니다.",
-      tokenomics_title: "토큰 경제",
-      total_supply: "총 공급량",
-      buy_tax: "구매 세금",
-      sell_tax: "판매 세금",
-      liquidity: "유동성",
-      copyright: "스타불 © 2026 | MoonBull & Bullzilla에서 영감 | 페어 런치",
-      wallet_metamask: "모바일 앱 또는 브라우저 확장 프로그램",
-      wallet_trust: "Binance Smart Chain 모바일 지갑",
-      wallet_coinbase: "공식 Coinbase 모바일 지갑",
-      wallet_wc: "WalletConnect를 지원하는 모든 지갑으로 연결",
-      qr_desc: "모바일 지갑으로 이 QR 코드를 스캔하세요",
-      close: "닫기"
-    },
-    es: {
-      logo: "STARBULL",
-      menu_home: "Inicio",
-      menu_buy: "Comprar Ahora",
-      menu_howto: "Cómo Comprar",
-      menu_tokenomics: "Tokenómica",
-      menu_locked: "LP Bloqueado",
-      hero_title: "STARBULL",
-      hero_desc: "La próxima moneda meme de generación. Lanzamiento justo, 0% de impuestos, Liquidez Bloqueada por 2 Años. Totalmente impulsada por la comunidad. Igual que MoonBull pero más fuerte.",
-      buy_title: "Comprar STARBULL",
-      stage1: "🔥 ETAPA 1 — PRECIO FIJO",
-      stage2: "🔥 ETAPA 2 — PRECIO AUMENTADO",
-      stage3: "🔥 ETAPA 3 — ÚLTIMA ETAPA",
-      progress_raised: "Recaudado: 94 BNB",
-      progress_max: "Máximo: 250 BNB",
-      connect_wallet: "Conectar Cartera",
-      wallet_not_connected: "Cartera no conectada",
-      you_pay: "Pagas",
-      you_get: "Recibes",
-      current_price: "Precio Actual: <span id='current-price'>1 BNB = 500,000 STARBULL</span>",
-      buy_now: "Comprar STARBULL Ahora",
-      presale_wallet: "Cartera de Preventa: <span>0xA616911194eca5aD6E858a2aCFAC2cDaDC8f04B1</span>",
-      howto_title: "Cómo Comprar",
-      step1: "1 Conectar Cartera",
-      step1_desc: "Conecta MetaMask, Trust Wallet o cualquier otra cartera al sitio web.",
-      step2: "2 Seleccionar Red",
-      step2_desc: "Elige tu red preferida (BSC, Ethereum, Polygon, Avalanche).",
-      step3: "3 Ingresar Cantidad",
-      step3_desc: "Ingresa la cantidad de criptomoneda que quieres gastar para comprar STARBULL.",
-      step4: "4 Confirmar Compra",
-      step4_desc: "Confirma la transacción y recibe tu STARBULL instantáneamente.",
-      tokenomics_title: "Tokenómica",
-      total_supply: "Oferta Total",
-      buy_tax: "Impuesto de Compra",
-      sell_tax: "Impuesto de Venta",
-      liquidity: "Liquidez",
-      copyright: "Starbull © 2026 | Inspirado en MoonBull & Bullzilla | Lanzamiento Justo",
-      wallet_metamask: "Aplicación móvil o extensión de navegador",
-      wallet_trust: "Cartera móvil para Binance Smart Chain",
-      wallet_coinbase: "Cartera móvil oficial de Coinbase",
-      wallet_wc: "Conecta con cualquier cartera compatible con WalletConnect",
-      qr_desc: "Escanea este código QR con tu cartera móvil",
-      close: "Cerrar"
-    }
-  };
+// ===== 页面初始化 =====
+document.addEventListener('DOMContentLoaded', function() {
+  // 初始化组件
+  initNavigation();
+  initWallet();
+  initPurchase();
+  initCountdown();
+  initAnimations();
+});
 
-  // 2. 核心配置
-  const CONFIG = {
-    presaleWallet: "0xA616911194eca5aD6E858a2aCFAC2cDaDC8f04B1",
-    tokenContracts: {
-      bsc: "0x36e18dCf2364F25701661C623945e99c6E39E61B",
-      eth: "0x36e18dCf2364F25701661C623945e99c6E39E61B",
-      polygon: "0x36e18dCf2364F25701661C623945e99c6E39E61B",
-      avalanche: "0x36e18dCf2364F25701661C623945e99c6E39E61B"
-    },
-    networkConfig: {
-      bsc: { currency: "BNB", contract: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c", rate: 500000, chainId: 56 },
-      eth: { currency: "ETH", contract: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", rate: 1000000, chainId: 1 },
-      polygon: { currency: "MATIC", contract: "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270", rate: 5000, chainId: 137 },
-      avalanche: { currency: "AVAX", contract: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7", rate: 80000, chainId: 43114 }
-    },
-    presaleStages: {
-      1: { min: 0, max: 100, rate: 500000, text: "stage1", progressColor: "stage1-fill" },
-      2: { min: 100, max: 200, rate: 450000, text: "stage2", progressColor: "stage2-fill" },
-      3: { min: 200, max: 250, rate: 400000, text: "stage3", progressColor: "stage3-fill" }
-    },
-    currentRaised: 94,
-    maxRaised: 250,
-    // WalletConnect配置
-    walletConnect: {
-      infuraId: "27e484dcd9e3efcfd25a83a78777cdf1",
-      bridge: "https://bridge.walletconnect.org"
-    }
-  };
-
-  // 全局变量
-  let currentLang = "en";
-  let web3Modal;
-  let provider;
-  let signer;
-  let currentAccount = null;
-  let currentNetwork = "bsc";
-  let currentConfig = CONFIG.networkConfig.bsc;
-  let currentStage = 1;
-  let isMobile = false;
-  let walletConnectProvider = null;
-
-  // DOM元素
-  const langMenuItems = document.querySelectorAll('.lang-menu-item');
-  const presaleStageEl = document.getElementById('presale-stage');
-  const progressFillEl = document.getElementById('progress-fill');
-  const progressRaisedEl = document.getElementById('progress-raised');
-  const connectWalletBtn = document.getElementById('connect-wallet-btn');
-  const walletStatus = document.getElementById('wallet-status');
-  const networkBtns = document.querySelectorAll('.network-btn');
-  const payAmountInput = document.getElementById('pay-amount');
-  const getAmountInput = document.getElementById('get-amount');
-  const payCurrency = document.getElementById('pay-currency');
-  const currentPriceEl = document.getElementById('current-price');
-  const buyTokenBtn = document.getElementById('buy-token-btn');
+// ===== 导航栏功能 =====
+function initNavigation() {
+  const header = document.getElementById('header');
+  const menuToggle = document.getElementById('menuToggle');
+  const navMenu = document.getElementById('navMenu');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const langBtn = document.getElementById('langBtn');
+  const langOptions = document.querySelectorAll('.lang-option');
   
-  // 钱包弹窗元素
-  const walletModal = document.getElementById('wallet-modal');
-  const walletModalClose = document.getElementById('wallet-modal-close');
-  const walletItems = document.querySelectorAll('.wallet-item');
-  
-  // 扫码弹窗元素
-  const qrModal = document.getElementById('qr-modal');
-  const qrModalClose = document.getElementById('qr-modal-close');
-  const qrCodeEl = document.getElementById('qr-code');
-
-  // ==================== 设备检测逻辑 ====================
-  function detectDevice() {
-    // 检测移动端
-    const userAgent = navigator.userAgent.toLowerCase();
-    const mobileRegex = /android|iphone|ipad|ipod|blackberry|windows phone|mobile/i;
-    isMobile = mobileRegex.test(userAgent) || (window.innerWidth <= 768 && !/windows|macintosh|linux/i.test(userAgent));
-    return isMobile;
-  }
-
-  // ==================== 多语言切换逻辑（适配下拉菜单） ====================
-  function setLanguage(lang) {
-    currentLang = lang;
-    // 更新下拉菜单选中状态
-    langMenuItems.forEach(item => {
-      item.classList.remove('active');
-      if (item.dataset.lang === lang) item.classList.add('active');
-    });
-    // 更新页面文本
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-      const key = el.dataset.i18n;
-      if (translations[lang][key]) {
-        if (key === 'current_price' || key === 'presale_wallet') {
-          el.innerHTML = translations[lang][key];
-        } else {
-          el.textContent = translations[lang][key];
-        }
+  // 滚动时高亮导航项
+  function highlightNavOnScroll() {
+    const sections = document.querySelectorAll('section[id]');
+    const scrollPos = window.scrollY + 100;
+    
+    sections.forEach(section => {
+      const sectionTop = section.offsetTop;
+      const sectionHeight = section.offsetHeight;
+      const sectionId = section.getAttribute('id');
+      
+      if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === `#${sectionId}`) {
+            link.classList.add('active');
+          }
+        });
       }
     });
-    // 更新价格显示
-    updatePriceDisplay();
-    // 更新预售阶段文本
-    presaleStageEl.textContent = translations[lang][CONFIG.presaleStages[currentStage].text];
-    // 更新进度文本
-    progressRaisedEl.textContent = translations[lang].progress_raised.replace('94', CONFIG.currentRaised);
+    
+    // 滚动时改变头部样式
+    if (window.scrollY > 50) {
+      header.classList.add('scrolled');
+    } else {
+      header.classList.remove('scrolled');
+    }
   }
-
-  // 语言下拉菜单点击事件
-  langMenuItems.forEach(item => {
-    item.addEventListener('click', () => {
-      setLanguage(item.dataset.lang);
+  
+  // 移动端菜单切换
+  menuToggle.addEventListener('click', () => {
+    navMenu.classList.toggle('active');
+    menuToggle.innerHTML = navMenu.classList.contains('active') 
+      ? '<i class="fas fa-times"></i>' 
+      : '<i class="fas fa-bars"></i>';
+  });
+  
+  // 导航链接点击
+  navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      if (link.getAttribute('href').startsWith('#')) {
+        e.preventDefault();
+        const targetId = link.getAttribute('href');
+        const targetSection = document.querySelector(targetId);
+        
+        if (targetSection) {
+          // 关闭移动端菜单
+          navMenu.classList.remove('active');
+          menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+          
+          // 滚动到目标区域
+          window.scrollTo({
+            top: targetSection.offsetTop - 80,
+            behavior: 'smooth'
+          });
+        }
+      }
     });
   });
-
-  // ==================== 自动预售阶段识别 ====================
-  function updatePresaleStage() {
-    const raised = CONFIG.currentRaised;
-    if (raised >= CONFIG.presaleStages[3].min) {
-      currentStage = 3;
-    } else if (raised >= CONFIG.presaleStages[2].min) {
-      currentStage = 2;
-    } else {
-      currentStage = 1;
-    }
-    
-    const stageConfig = CONFIG.presaleStages[currentStage];
-    presaleStageEl.textContent = translations[currentLang][stageConfig.text];
-    
-    const progressPercent = (raised / CONFIG.maxRaised) * 100;
-    progressFillEl.style.width = `${progressPercent}%`;
-    
-    progressFillEl.className = `progress-fill ${stageConfig.progressColor}`;
-    
-    progressRaisedEl.textContent = translations[currentLang].progress_raised.replace('94', raised);
-    
-    currentConfig.rate = stageConfig.rate;
-    updatePriceDisplay();
-    calculateTokens();
-  }
-
-  // ==================== 双向换算逻辑 ====================
-  function updatePriceDisplay() {
-    currentPriceEl.textContent = `1 ${currentConfig.currency} = ${currentConfig.rate.toLocaleString()} STARBULL`;
-  }
-
-  function calculateTokens(fromPay = true) {
-    if (fromPay) {
-      const amount = parseFloat(payAmountInput.value) || 0;
-      const tokens = amount * currentConfig.rate;
-      getAmountInput.value = tokens.toLocaleString().replace(/,/g, '');
-    } else {
-      const tokens = parseFloat(getAmountInput.value) || 0;
-      const amount = tokens / currentConfig.rate;
-      payAmountInput.value = amount.toFixed(6);
-    }
-  }
-
-  payAmountInput.addEventListener('input', () => calculateTokens(true));
-  getAmountInput.addEventListener('input', () => calculateTokens(false));
-
-  // ==================== 钱包连接核心逻辑（适配PC/移动端） ====================
-  function initWeb3Modal() {
-    const providerOptions = {
-      walletconnect: {
-        package: WalletConnectProvider,
-        options: { 
-          infuraId: CONFIG.walletConnect.infuraId,
-          bridge: CONFIG.walletConnect.bridge
-        }
-      }
-    };
-
-    web3Modal = new Web3Modal({
-      cacheProvider: true,
-      providerOptions,
-      disableInjectedProvider: false
+  
+  // 语言切换
+  langOptions.forEach(option => {
+    option.addEventListener('click', () => {
+      const lang = option.getAttribute('data-lang');
+      langOptions.forEach(opt => opt.classList.remove('active'));
+      option.classList.add('active');
+      langBtn.querySelector('span').textContent = lang.toUpperCase();
+      // 这里可以添加语言切换逻辑
+      console.log(`Language changed to ${lang}`);
     });
-  }
+  });
+  
+  // 滚动监听
+  window.addEventListener('scroll', highlightNavOnScroll);
+  highlightNavOnScroll(); // 初始调用
+}
 
-  // 初始化钱包连接
-  connectWalletBtn.addEventListener('click', async () => {
-    detectDevice();
+// ===== 钱包连接功能 =====
+function initWallet() {
+  const connectBtn = document.getElementById('connectBtn');
+  const walletBtn = document.getElementById('connectWalletBtn');
+  const walletModal = document.getElementById('walletModal');
+  const closeWalletModal = document.getElementById('closeWalletModal');
+  const walletOptions = document.querySelectorAll('[data-wallet]');
+  
+  // 模拟钱包连接
+  let isConnected = false;
+  
+  function connectWallet() {
+    isConnected = true;
     
-    if (isMobile) {
-      // 移动端：显示钱包选择弹窗
+    // 更新UI
+    connectBtn.innerHTML = '<i class="fas fa-check-circle"></i><span>Wallet Connected</span>';
+    connectBtn.classList.remove('btn-primary');
+    connectBtn.classList.add('btn-success');
+    
+    walletBtn.innerHTML = '<i class="fas fa-wallet"></i><span>0x1234...5678</span>';
+    walletBtn.classList.add('connected');
+    
+    // 启用购买按钮
+    document.getElementById('buyBtn').disabled = false;
+    
+    // 显示钱包地址
+    const walletStatus = document.getElementById('walletStatus');
+    const walletAddress = document.getElementById('walletAddress');
+    walletAddress.textContent = '0x1234567890abcdef1234567890abcdef12345678';
+    walletStatus.classList.remove('d-none');
+    
+    // 关闭模态框
+    walletModal.classList.remove('active');
+  }
+  
+  // 打开钱包选择模态框
+  connectBtn.addEventListener('click', () => {
+    if (!isConnected) {
       walletModal.classList.add('active');
-    } else {
-      // PC端：先检测MetaMask插件
-      if (window.ethereum && window.ethereum.isMetaMask) {
-        // 有MetaMask插件，直接连接
-        await connectWithMetaMask();
-      } else {
-        // 无插件，显示WalletConnect扫码
-        await showWalletConnectQR();
-      }
     }
   });
-
-  // 关闭钱包弹窗
-  walletModalClose.addEventListener('click', () => {
+  
+  walletBtn.addEventListener('click', () => {
+    if (!isConnected) {
+      walletModal.classList.add('active');
+    }
+  });
+  
+  // 关闭模态框
+  closeWalletModal.addEventListener('click', () => {
     walletModal.classList.remove('active');
   });
-
-  // 关闭扫码弹窗
-  qrModalClose.addEventListener('click', () => {
-    qrModal.classList.remove('active');
-    // 断开WalletConnect连接
-    if (walletConnectProvider) {
-      walletConnectProvider.disconnect();
-      walletConnectProvider = null;
-    }
-  });
-
-  // 移动端钱包选择
-  walletItems.forEach(item => {
-    item.addEventListener('click', async () => {
-      const walletType = item.dataset.wallet;
+  
+  walletModal.addEventListener('click', (e) => {
+    if (e.target === walletModal) {
       walletModal.classList.remove('active');
+    }
+  });
+  
+  // 钱包选项点击
+  walletOptions.forEach(option => {
+    option.addEventListener('click', () => {
+      const walletType = option.getAttribute('data-wallet');
+      console.log(`Connecting to ${walletType}...`);
       
-      switch(walletType) {
-        case 'metamask':
-          await connectWithMetaMask();
-          break;
-        case 'trust':
-          await connectWithTrustWallet();
-          break;
-        case 'coinbase':
-          await connectWithCoinbaseWallet();
-          break;
-        case 'walletconnect':
-          await showWalletConnectQR();
-          break;
-      }
+      // 模拟连接过程
+      connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Connecting...</span>';
+      
+      setTimeout(() => {
+        connectWallet();
+      }, 1500);
     });
   });
+}
 
-  // 连接MetaMask
-  async function connectWithMetaMask() {
-    try {
-      if (!window.ethereum) {
-        // 移动端跳转MetaMask App
-        if (isMobile) {
-          window.open('https://metamask.app.link/dapp/' + window.location.host, '_blank');
-          return;
-        } else {
-          alert(translations[currentLang].wallet_not_connected.replace('not connected', 'MetaMask not installed'));
-          return;
-        }
-      }
-      
-      // 请求账户授权
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      currentAccount = accounts[0];
-      
-      // 初始化provider
-      provider = window.ethereum;
-      const web3Provider = new ethers.providers.Web3Provider(provider);
-      signer = web3Provider.getSigner();
-      
-      // 监听账户变化
-      provider.on('accountsChanged', (accounts) => {
-        currentAccount = accounts[0];
-        updateWalletStatus();
-      });
-      
-      // 监听链变化
-      provider.on('chainChanged', (chainId) => {
-        window.location.reload();
-      });
-      
-      await switchNetwork(currentNetwork);
-      updateWalletStatus();
-      buyTokenBtn.disabled = false;
-      
-    } catch (error) {
-      console.error('MetaMask connection error:', error);
-      alert(`${translations[currentLang].wallet_not_connected.replace('not connected', 'failed')}: ${error.message}`);
-    }
+// ===== 购买功能 =====
+function initPurchase() {
+  const payAmount = document.getElementById('payAmount');
+  const receiveAmount = document.getElementById('receiveAmount');
+  const priceValue = document.getElementById('priceValue');
+  const buyBtn = document.getElementById('buyBtn');
+  
+  // 当前阶段价格 (示例：阶段11-15)
+  const currentPrice = 0.00000162; // 1 BNB = 1,000,000 / 0.00000162 = 617,284 STARBULL
+  
+  // 更新价格显示
+  function updatePriceDisplay() {
+    const tokensPerBNB = Math.floor(1000000 / currentPrice);
+    priceValue.textContent = `1 BNB = ${tokensPerBNB.toLocaleString()} STARBULL`;
   }
-
-  // 连接Trust Wallet
-  async function connectWithTrustWallet() {
-    try {
-      if (isMobile) {
-        // 移动端跳转Trust Wallet
-        window.open('trust://open_url?url=' + encodeURIComponent(window.location.href), '_blank');
-        // 备用链接
-        setTimeout(() => {
-          window.open('https://link.trustwallet.com/open_url?coinId=96&url=' + encodeURIComponent(window.location.href), '_blank');
-        }, 1000);
-      } else {
-        // PC端使用WalletConnect
-        await showWalletConnectQR();
-      }
-    } catch (error) {
-      console.error('Trust Wallet connection error:', error);
-      alert(`${translations[currentLang].wallet_not_connected.replace('not connected', 'failed')}: ${error.message}`);
-    }
-  }
-
-  // 连接Coinbase Wallet
-  async function connectWithCoinbaseWallet() {
-    try {
-      if (isMobile) {
-        // 移动端跳转Coinbase Wallet
-        window.open('https://go.cb-w.com/dapp?cb_url=' + encodeURIComponent(window.location.href), '_blank');
-      } else {
-        // PC端使用WalletConnect
-        await showWalletConnectQR();
-      }
-    } catch (error) {
-      console.error('Coinbase Wallet connection error:', error);
-      alert(`${translations[currentLang].wallet_not_connected.replace('not connected', 'failed')}: ${error.message}`);
-    }
-  }
-
-  // 显示WalletConnect扫码界面
-  async function showWalletConnectQR() {
-    try {
-      if (!web3Modal) initWeb3Modal();
-      
-      // 显示扫码弹窗
-      qrModal.classList.add('active');
-      
-      // 创建WalletConnect provider
-      walletConnectProvider = new WalletConnectProvider({
-        infuraId: CONFIG.walletConnect.infuraId,
-        bridge: CONFIG.walletConnect.bridge,
-        qrcode: false // 手动生成QR码
-      });
-      
-      // 生成连接URI并创建QR码
-      await walletConnectProvider.enable();
-      const uri = walletConnectProvider.connector.uri;
-      
-      // 生成QR码
-      QRCode.toCanvas(qrCodeEl, uri, {
-        width: 200,
-        color: {
-          dark: '#ffffff',
-          light: '#00000000'
-        }
-      }, (error) => {
-        if (error) console.error('QR Code generation error:', error);
-      });
-      
-      // 监听连接成功
-      walletConnectProvider.on('connect', async (connectInfo) => {
-        console.log('WalletConnect connected:', connectInfo);
-        qrModal.classList.remove('active');
-        
-        // 初始化provider
-        provider = walletConnectProvider;
-        const web3Provider = new ethers.providers.Web3Provider(provider);
-        signer = web3Provider.getSigner();
-        
-        // 获取账户
-        const accounts = await web3Provider.listAccounts();
-        currentAccount = accounts[0];
-        
-        // 监听断开连接
-        walletConnectProvider.on('disconnect', (disconnectInfo) => {
-          console.log('WalletConnect disconnected:', disconnectInfo);
-          currentAccount = null;
-          updateWalletStatus();
-          buyTokenBtn.disabled = true;
-        });
-        
-        await switchNetwork(currentNetwork);
-        updateWalletStatus();
-        buyTokenBtn.disabled = false;
-      });
-      
-      // 监听连接错误
-      walletConnectProvider.on('error', (error) => {
-        console.error('WalletConnect error:', error);
-        qrModal.classList.remove('active');
-        alert(`${translations[currentLang].wallet_not_connected.replace('not connected', 'failed')}: ${error.message}`);
-      });
-      
-    } catch (error) {
-      console.error('WalletConnect QR error:', error);
-      qrModal.classList.remove('active');
-      alert(`${translations[currentLang].wallet_not_connected.replace('not connected', 'failed')}: ${error.message}`);
-    }
-  }
-
-  // 更新钱包状态显示
-  function updateWalletStatus() {
-    if (currentAccount) {
-      walletStatus.textContent = `${translations[currentLang].connect_wallet.replace('Connect', 'Connected')}: ${currentAccount.substring(0, 6)}...${currentAccount.substring(38)}`;
-      connectWalletBtn.textContent = translations[currentLang].connect_wallet.replace('Connect', 'Change');
+  
+  // 计算接收的代币数量
+  function calculateTokens() {
+    const amount = parseFloat(payAmount.value);
+    
+    if (amount && amount > 0) {
+      const tokensPerBNB = Math.floor(1000000 / currentPrice);
+      const tokens = amount * tokensPerBNB;
+      receiveAmount.value = tokens.toLocaleString();
+      buyBtn.disabled = false;
     } else {
-      walletStatus.textContent = translations[currentLang].wallet_not_connected;
-      connectWalletBtn.textContent = translations[currentLang].connect_wallet;
+      receiveAmount.value = '';
+      buyBtn.disabled = true;
     }
   }
-
-  // ==================== 网络切换逻辑 ====================
-  networkBtns.forEach(btn => {
-    btn.addEventListener('click', async () => {
-      networkBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+  
+  // 购买按钮点击
+  buyBtn.addEventListener('click', () => {
+    const amount = parseFloat(payAmount.value);
+    const tokens = receiveAmount.value;
+    
+    if (amount && amount > 0) {
+      // 模拟购买过程
+      buyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Processing...</span>';
+      buyBtn.disabled = true;
       
-      currentNetwork = btn.dataset.network;
-      currentConfig = CONFIG.networkConfig[currentNetwork];
-      
-      await switchNetwork(currentNetwork);
-      
-      payCurrency.textContent = currentConfig.currency;
-      updatePriceDisplay();
-      calculateTokens();
-    });
+      setTimeout(() => {
+        alert(`Purchase successful! You received ${tokens} STARBULL tokens.`);
+        payAmount.value = '';
+        receiveAmount.value = '';
+        buyBtn.innerHTML = '<i class="fas fa-bolt"></i><span>Buy STARBULL</span>';
+        buyBtn.disabled = false;
+      }, 2000);
+    }
   });
+  
+  // 监听输入
+  payAmount.addEventListener('input', calculateTokens);
+  
+  // 初始化
+  updatePriceDisplay();
+}
 
-  async function switchNetwork(network) {
-    const chainId = CONFIG.networkConfig[network].chainId;
+// ===== 倒计时功能 =====
+function initCountdown() {
+  const daysEl = document.getElementById('days');
+  const hoursEl = document.getElementById('hours');
+  const minutesEl = document.getElementById('minutes');
+  const secondsEl = document.getElementById('seconds');
+  
+  // 设置目标日期（示例：5天后）
+  const targetDate = new Date();
+  targetDate.setDate(targetDate.getDate() + 5);
+  targetDate.setHours(12, 47, 22, 0);
+  
+  function updateCountdown() {
+    const now = new Date().getTime();
+    const distance = targetDate.getTime() - now;
     
-    if (!provider) return;
+    if (distance < 0) {
+      // 倒计时结束
+      daysEl.textContent = '00';
+      hoursEl.textContent = '00';
+      minutesEl.textContent = '00';
+      secondsEl.textContent = '00';
+      return;
+    }
     
-    try {
-      await provider.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: `0x${parseInt(chainId).toString(16)}` }]
-      });
-    } catch (error) {
-      if (error.code === 4902) {
-        try {
-          await provider.request({
-            method: 'wallet_addEthereumChain',
-            params: [getNetworkParams(chainId)]
-          });
-        } catch (addError) {
-          console.error('Failed to add network:', addError);
-          alert(`${translations[currentLang].connect_wallet.replace('Connect', 'Please')} switch to ${network.toUpperCase()} ${translations[currentLang].menu_l
+    // 计算天、时、分、秒
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    
+    // 更新显示
+    daysEl.textContent = days.toString().padStart(2, '0');
+    hoursEl.textContent = hours.toString().padStart(2, '0');
+    minutesEl.textContent = minutes.toString().padStart(2, '0');
+    secondsEl.textContent = seconds.toString().padStart(2, '0');
+  }
+  
+  // 初始调用并设置定时器
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+}
+
+// ===== 动画效果 =====
+function initAnimations() {
+  // 添加滚动动画
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+  };
+  
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('animate__animated', 'animate__fadeInUp');
+      }
+    });
+  }, observerOptions);
+  
+  // 观察需要动画的元素
+  document.querySelectorAll('.stat-card, .feature-card, .info-card').forEach(el => {
+    observer.observe(el);
+  });
+}
+</script>
+</body>
+</html>
