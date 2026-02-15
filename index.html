@@ -1241,12 +1241,12 @@
                         </svg>
                         <div class="chart-center">
                             <div class="chart-center-label">Total</div>
-                            <div class="chart-center-value">732B</div>
+                            <div class="chart-center-value" id="totalSupplyDisplay">732B</div>
                         </div>
                     </div>
                     <div class="total-supply-card">
                         <div class="total-supply-label">Total Supply</div>
-                        <div class="total-supply-value font-display">732,000,000,000</div>
+                        <div class="total-supply-value font-display" id="totalSupplyFull">732,000,000,000</div>
                         <div style="color: var(--text-muted); margin-top: 8px; font-size: 14px;">BFG Tokens</div>
                     </div>
                 </div>
@@ -1256,7 +1256,7 @@
                             <div class="token-dot" style="background: #FF3B3B"></div>
                             <div class="token-info">
                                 <div class="token-name">Presale</div>
-                                <div class="token-amount">366,000,000,000 BFG</div>
+                                <div class="token-amount" id="presaleAllocation">366,000,000,000 BFG</div>
                             </div>
                         </div>
                         <div class="token-percent" style="color: #FF3B3B">50%</div>
@@ -1266,7 +1266,7 @@
                             <div class="token-dot" style="background: #FFD700"></div>
                             <div class="token-info">
                                 <div class="token-name">Staking Rewards</div>
-                                <div class="token-amount">146,400,000,000 BFG</div>
+                                <div class="token-amount" id="stakingAllocation">146,400,000,000 BFG</div>
                             </div>
                         </div>
                         <div class="token-percent" style="color: #FFD700">20%</div>
@@ -1286,7 +1286,7 @@
                             <div class="token-dot" style="background: #FF4500"></div>
                             <div class="token-info">
                                 <div class="token-name">Burn Reserve</div>
-                                <div class="token-amount">36,600,000,000 BFG</div>
+                                <div class="token-amount" id="burnReserveAllocation">36,600,000,000 BFG</div>
                             </div>
                         </div>
                         <div class="token-percent" style="color: #FF4500">5%</div>
@@ -1499,28 +1499,21 @@
         (function() {
             // ---------- 配置项 ----------
             const CONFIG = {
-                // 请替换为您的真实预售合约地址 (BSC主网)
-                CONTRACT_ADDRESS: '0x0000000000000000000000000000000000000000', // <-- 务必替换
+                CONTRACT_ADDRESS: '0x16D6c1a692AaC51a3821bA2903115d4600649F07', // 您提供的合约地址
                 BSC_CHAIN_ID: '0x38', // 56 的十六进制
                 BSC_RPC: 'https://bsc-dataseed.binance.org/',
-                WALLETCONNECT_PROJECT_ID: 'YOUR_PROJECT_ID', // 从 walletconnect.com 申请
-                // 最小ABI (包含预售必要方法)
-                CONTRACT_ABI: [
-                    "function totalRaised() view returns (uint256)",
-                    "function currentPrice() view returns (uint256)", // 返回每BNB能买多少BFG (wei风格, 需除以1e18? 这里简化)
-                    "function getUserPurchased(address) view returns (uint256)",
-                    "function buy() payable",
-                    "function stage() view returns (uint8)"
-                ]
+                WALLETCONNECT_PROJECT_ID: 'fe819ed06d9e5489f764fc7b1dae1c4e', // 您提供的Project ID
+                // 完整的合约ABI (由您提供)
+                CONTRACT_ABI: [{"inputs":[{"internalType":"address payable","name":"_teamWallet","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"burn","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"burnFrom","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_referrer","type":"address"},{"internalType":"uint256","name":"_minTokensOut","type":"uint256"}],"name":"buyTokens","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[],"name":"claimTokens","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"depositFunds","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"endPresale","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[],"name":"PresaleEnded","type":"event"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"stage","type":"uint256"}],"name":"RoarBurn","type":"event"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"},{"internalType":"uint256","name":"_lockDays","type":"uint256"}],"name":"stake","outputs":[],"stateMutability":"nonpayable","type":"function"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"stage","type":"uint256"}],"name":"StakingEnabled","type":"event"},{"inputs":[],"name":"startPresale","outputs":[],"stateMutability":"nonpayable","type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"buyer","type":"address"},{"indexed":false,"internalType":"uint256","name":"tokenAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"bnbAmount","type":"uint256"}],"name":"TokensPurchased","type":"event"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_index","type":"uint256"}],"name":"unstake","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"BURN_RESERVE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"claimStartTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"currentPriceStage","outputs":[{"internalType":"uint88","name":"","type":"uint88"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"currentRate","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"hasClaimed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"lastPriceIncreaseRaised","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"lastPriceIncreaseTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"PRESALE_ALLOCATION","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"presaleActive","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"presaleEnded","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"presaleEndTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"referrers","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"STAKING_ALLOCATION","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"stakingEnabled","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"teamWallet","outputs":[{"internalType":"address payable","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"TOTAL_SUPPLY","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalRaised","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"userPurchases","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"userReferralBonuses","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"userStakes","outputs":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"startTime","type":"uint256"},{"internalType":"uint256","name":"lockDays","type":"uint256"}],"stateMutability":"view","type":"function"}]
             };
 
             // ---------- 全局变量 ----------
             let provider, signer, userAddress;
-            let onboard; // web3-onboard实例
-            let wallet;   // 当前连接的钱包
+            let onboard;
+            let wallet;
             let contract;
             let contractAddress = CONFIG.CONTRACT_ADDRESS;
-            let currentPriceRate = 1_000_000; // 默认1 BNB = 1,000,000 BFG
+            let currentPriceRate = 1_000_000n; // 默认为 bigint
 
             // DOM 元素
             const walletBtn = document.getElementById('walletBtn');
@@ -1535,12 +1528,16 @@
             const txStatusDiv = document.getElementById('txStatus');
             const currentStageEl = document.getElementById('currentStage');
             const contractDisplay = document.getElementById('contractAddressDisplay');
+            // 可选更新静态分配数据
+            const totalSupplyDisplay = document.getElementById('totalSupplyDisplay');
+            const totalSupplyFull = document.getElementById('totalSupplyFull');
+            const presaleAllocation = document.getElementById('presaleAllocation');
+            const stakingAllocation = document.getElementById('stakingAllocation');
+            const burnReserveAllocation = document.getElementById('burnReserveAllocation');
 
             // 显示合约地址 (截断)
             if (contractAddress && contractAddress !== '0x0000000000000000000000000000000000000000') {
                 contractDisplay.textContent = contractAddress.slice(0,6) + '...' + contractAddress.slice(-4);
-            } else {
-                contractDisplay.textContent = 'Not set';
             }
 
             // ---------- 工具函数 ----------
@@ -1552,8 +1549,8 @@
                 return parseFloat(ethers.formatEther(wei)).toFixed(4);
             }
 
-            function formatBFG(amount) {
-                return parseFloat(ethers.formatUnits(amount, 18)).toLocaleString();
+            function formatBFG(amount) { // amount 为 bigint 或 number, 以wei为单位
+                return ethers.formatUnits(amount, 18);
             }
 
             // 显示交易状态
@@ -1577,48 +1574,67 @@
 
             // 更新所有UI数据
             async function refreshUI() {
-                if (!provider || !userAddress) return;
+                if (!provider || !userAddress || !contract) return;
                 try {
                     // 更新余额
                     const balance = await provider.getBalance(userAddress);
                     walletBalanceEl.textContent = formatBNB(balance) + ' BNB';
 
-                    // 如果有合约实例
-                    if (contract && contractAddress !== '0x0000000000000000000000000000000000000000') {
-                        // 总筹集 (假设返回wei)
-                        const raisedWei = await contract.totalRaised();
-                        const raisedBNB = ethers.formatEther(raisedWei);
-                        totalRaisedBNBEl.textContent = parseFloat(raisedBNB).toFixed(2) + ' BNB';
-                        // 简单估算USD (假设BNB=600$)
-                        totalRaisedEl.textContent = '$' + (parseFloat(raisedBNB) * 600).toLocaleString();
+                    // 总筹集 (假设返回wei)
+                    const raisedWei = await contract.totalRaised();
+                    const raisedBNB = ethers.formatEther(raisedWei);
+                    totalRaisedBNBEl.textContent = parseFloat(raisedBNB).toFixed(2) + ' BNB';
+                    // 简单估算USD (假设BNB=600$)
+                    totalRaisedEl.textContent = '$' + (parseFloat(raisedBNB) * 600).toLocaleString();
 
-                        // 当前价格 (rate)
-                        try {
-                            const price = await contract.currentPrice();
-                            // 假设price返回的是 每BNB多少BFG (单位为ether, 即 1e18)
-                            currentPriceRate = parseFloat(ethers.formatUnits(price, 18));
-                            currentPriceEl.textContent = currentPriceRate.toLocaleString();
-                        } catch (e) {
-                            console.warn('使用默认价格');
-                        }
+                    // 当前价格 rate (每BNB能买多少BFG，以wei为单位)
+                    try {
+                        const rate = await contract.currentRate(); // 返回 bigint
+                        currentPriceRate = rate;
+                        // 显示为每BNB的BFG数量（除以10^18）
+                        const rateFormatted = ethers.formatUnits(rate, 18);
+                        // 保留整数或小数
+                        currentPriceEl.textContent = Number(rateFormatted).toLocaleString(undefined, {maximumFractionDigits: 0});
+                    } catch (e) {
+                        console.warn('使用默认价格');
+                    }
 
-                        // 用户购买量
-                        const purchased = await contract.getUserPurchased(userAddress);
-                        userPurchasesEl.textContent = ethers.formatUnits(purchased, 2); // 简略显示
-
-                        // 阶段
-                        try {
-                            const stageNum = await contract.stage();
-                            currentStageEl.textContent = stageNum.toString();
-                        } catch (e) {}
-                    } else {
-                        // 模拟数据
-                        totalRaisedEl.textContent = '$0';
-                        totalRaisedBNBEl.textContent = '0 BNB';
-                        currentPriceEl.textContent = '1,000,000';
+                    // 用户购买量
+                    try {
+                        const purchased = await contract.userPurchases(userAddress);
+                        userPurchasesEl.textContent = formatBFG(purchased);
+                    } catch (e) {
                         userPurchasesEl.textContent = '0';
+                    }
+
+                    // 阶段
+                    try {
+                        const stage = await contract.currentPriceStage();
+                        currentStageEl.textContent = stage.toString();
+                    } catch (e) {
                         currentStageEl.textContent = '1';
                     }
+
+                    // 可选：从合约读取总供应量等静态数据更新页面
+                    try {
+                        const total = await contract.TOTAL_SUPPLY();
+                        const totalFormatted = ethers.formatUnits(total, 18);
+                        totalSupplyFull.textContent = Number(totalFormatted).toLocaleString();
+                        totalSupplyDisplay.textContent = (Number(totalFormatted)/1e9).toFixed(0) + 'B'; // 粗略显示
+                    } catch (e) {}
+                    try {
+                        const presale = await contract.PRESALE_ALLOCATION();
+                        presaleAllocation.textContent = formatBFG(presale) + ' BFG';
+                    } catch (e) {}
+                    try {
+                        const staking = await contract.STAKING_ALLOCATION();
+                        stakingAllocation.textContent = formatBFG(staking) + ' BFG';
+                    } catch (e) {}
+                    try {
+                        const burn = await contract.BURN_RESERVE();
+                        burnReserveAllocation.textContent = formatBFG(burn) + ' BFG';
+                    } catch (e) {}
+
                 } catch (err) {
                     console.error('刷新UI失败', err);
                 }
@@ -1627,9 +1643,19 @@
             // 估算BFG
             function updateEstimate() {
                 const bnb = parseFloat(bnbInput.value) || 0;
-                const rate = currentPriceRate;
-                const bfg = bnb * rate;
-                estimateValueEl.textContent = bfg.toLocaleString() + ' BFG';
+                if (!bnb) {
+                    estimateValueEl.textContent = '0 BFG';
+                    return;
+                }
+                // 使用 bigint 计算
+                try {
+                    const bnbWei = ethers.parseEther(bnb.toString());
+                    // 接收代币数量 = (bnbWei * rate) / 10**18
+                    const tokenWei = (bnbWei * currentPriceRate) / 10n**18n;
+                    estimateValueEl.textContent = ethers.formatUnits(tokenWei, 18) + ' BFG';
+                } catch (e) {
+                    estimateValueEl.textContent = '0 BFG';
+                }
             }
 
             // 设置快速金额
@@ -1649,7 +1675,7 @@
 
             // ---------- 钱包连接 ----------
             async function initOnboard() {
-                const injected = window.web3OnboardInjected.default(); // 注意CDN导出方式
+                const injected = window.web3OnboardInjected.default();
                 const walletConnect = window.web3OnboardWalletConnect.default({
                     projectId: CONFIG.WALLETCONNECT_PROJECT_ID,
                     requiredChains: [56],
@@ -1676,23 +1702,22 @@
                     }
                 });
 
-                // 订阅钱包状态
-                onboard.state.select('wallets').subscribe((wallets) => {
+                onboard.state.select('wallets').subscribe(async (wallets) => {
                     if (wallets && wallets.length > 0) {
                         wallet = wallets[0];
                         userAddress = wallet.accounts[0].address;
                         provider = new ethers.BrowserProvider(wallet.provider);
-                        provider.getSigner().then(s => {
-                            signer = s;
-                            if (contractAddress !== '0x0000000000000000000000000000000000000000') {
-                                contract = new ethers.Contract(contractAddress, CONFIG.CONTRACT_ABI, signer);
-                            }
-                            walletBtn.textContent = shortenAddress(userAddress);
-                            walletBtn.classList.add('connected');
-                            buyBtn.disabled = false;
-                            buyBtn.textContent = 'Buy Tokens';
-                            refreshUI();
-                        });
+                        signer = await provider.getSigner();
+                        contract = new ethers.Contract(contractAddress, CONFIG.CONTRACT_ABI, signer);
+                        
+                        walletBtn.textContent = shortenAddress(userAddress);
+                        walletBtn.classList.add('connected');
+                        buyBtn.disabled = false;
+                        buyBtn.textContent = 'Buy Tokens';
+                        
+                        // 刷新数据
+                        await refreshUI();
+                        updateEstimate();
                     } else {
                         wallet = null;
                         userAddress = null;
@@ -1732,13 +1757,18 @@
                     hideTxStatus();
                     showTxStatus('pending', '交易进行中...');
 
-                    const tx = await contract.buy({
+                    // 调用 buyTokens(address _referrer, uint256 _minTokensOut)
+                    // 这里简化：referrer 填零地址，minTokensOut 填0（无滑点保护）
+                    const zeroAddress = '0x0000000000000000000000000000000000000000';
+                    const minTokensOut = 0;
+                    
+                    const tx = await contract.buyTokens(zeroAddress, minTokensOut, {
                         value: ethers.parseEther(bnbAmount.toString())
                     });
                     showTxStatus('pending', '等待确认...', tx.hash);
                     await tx.wait();
                     showTxStatus('success', '购买成功！', tx.hash);
-                    refreshUI();
+                    await refreshUI();
                     bnbInput.value = '';
                     updateEstimate();
                 } catch (err) {
@@ -1768,10 +1798,8 @@
             // 初始化
             window.addEventListener('load', async () => {
                 await initOnboard();
-                // 尝试自动连接 (可选)
-                // 设置默认价格
+                // 初始估算
                 updateEstimate();
-                // 如果有之前连接, onboard会自动恢复?
             });
 
             // 输入监听
