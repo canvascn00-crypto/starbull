@@ -8,13 +8,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Bullforge - Next Generation Meme Coin on BSC</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- 多钱包SDK CDN -->
+    <!-- 多钱包SDK CDN (使用可靠的备用 CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/@web3-onboard/core@2.21.5/dist/index.umd.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@web3-onboard/injected-wallets@2.10.14/dist/index.umd.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@web3-onboard/walletconnect@2.5.5/dist/index.umd.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
     <style>
-        /* 样式保持不变，并添加滚动修正 */
+        /* 样式与之前一致，并增加了提示条样式 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --primary: #FF3B3B; --primary-dark: #CC2E2E; --secondary: #FFD700; --accent: #FF6B00; --bg-dark: #0A0A0F; --bg-darker: #050508; --bg-card: rgba(20, 20, 30, 0.8); --border: rgba(255, 59, 59, 0.3); --text: #FFFFFF; --text-muted: #999999; }
         body { font-family: 'Rajdhani', sans-serif; background: var(--bg-darker); color: var(--text); overflow-x: hidden; line-height: 1.6; }
@@ -56,7 +56,7 @@
         .btn-primary:hover { transform: translateY(-4px); box-shadow: 0 12px 50px rgba(255, 59, 59, 0.7); }
         .btn-secondary { padding: 20px 56px; background: transparent; border: 2px solid var(--border); border-radius: 14px; color: white; font-size: 18px; font-weight: 800; cursor: pointer; font-family: 'Orbitron', sans-serif; transition: all 0.3s; }
         .btn-secondary:hover { border-color: var(--primary); background: rgba(255, 59, 59, 0.1); }
-        section { padding: 120px 0; position: relative; scroll-margin-top: 80px; } /* 修复固定导航栏遮挡 */
+        section { padding: 120px 0; position: relative; scroll-margin-top: 80px; }
         .section-header { text-align: center; margin-bottom: 80px; }
         .section-badge { display: inline-block; padding: 8px 24px; background: rgba(255, 59, 59, 0.1); border: 1px solid var(--border); border-radius: 50px; color: var(--primary); font-size: 14px; font-weight: 700; margin-bottom: 20px; font-family: 'Orbitron', sans-serif; }
         .section-title { font-size: 56px; font-weight: 900; margin-bottom: 16px; font-family: 'Orbitron', sans-serif; }
@@ -162,8 +162,10 @@
         .contract-address { color: var(--primary); font-family: monospace; font-size: 14px; word-break: break-all; cursor: pointer; transition: all 0.3s; }
         .contract-address:hover { color: var(--secondary); }
         .footer-bottom { text-align: center; padding-top: 40px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 15px; }
+        /* 提示条样式 */
+        .cdn-warning { background: rgba(255, 100, 100, 0.2); border: 1px solid var(--primary); border-radius: 8px; padding: 12px 20px; margin: 10px 0; text-align: center; font-size: 14px; display: none; }
+        .cdn-warning a { color: var(--secondary); text-decoration: underline; cursor: pointer; }
 
-        /* 响应式优化 */
         @media (max-width: 1200px) {
             .features-grid { grid-template-columns: repeat(2, 1fr); }
             .tokenomics-container, .presale-container { grid-template-columns: 1fr; }
@@ -197,6 +199,11 @@
     </style>
 </head>
 <body>
+    <!-- CDN 加载失败提示（初始隐藏） -->
+    <div id="cdnWarning" class="cdn-warning" style="position: fixed; top: 80px; left: 0; right: 0; z-index: 1001; margin: 0 20px;">
+        ⚠️ 钱包模块加载失败，请 <a onclick="location.reload()">刷新页面</a> 重试。如果问题持续，请尝试使用支持 WalletConnect 的钱包（如 MetaMask 手机版）或 <a href="#" onclick="useFallbackWallet()">点击此处使用仅限浏览器钱包模式</a>。
+    </div>
+
     <!-- 导航栏 -->
     <header>
         <div class="container">
@@ -416,6 +423,7 @@
             let contract;
             const contractAddress = CONFIG.CONTRACT_ADDRESS;
             let currentPriceRate = 1_000_000n;
+            let usingFallback = false; // 是否使用降级方案（直接 ethers 连接）
 
             // DOM 元素
             const walletBtn = document.getElementById('walletBtn');
@@ -435,6 +443,7 @@
             const presaleAllocation = document.getElementById('presaleAllocation');
             const stakingAllocation = document.getElementById('stakingAllocation');
             const burnReserveAllocation = document.getElementById('burnReserveAllocation');
+            const cdnWarning = document.getElementById('cdnWarning');
 
             if (contractAddress && contractAddress !== '0x0000000000000000000000000000000000000000') {
                 contractDisplay.textContent = contractAddress.slice(0,6) + '...' + contractAddress.slice(-4);
@@ -557,32 +566,120 @@
                 updateEstimate();
             };
 
-            // ---------- 通用模块加载器 ----------
+            // ---------- 模块查找函数（忽略大小写）----------
+            function findGlobalModule(baseName) {
+                const keys = Object.keys(window);
+                for (let key of keys) {
+                    if (key.toLowerCase() === baseName.toLowerCase()) {
+                        console.log(`找到匹配模块: ${key} ->`, window[key]);
+                        return window[key];
+                    }
+                }
+                return undefined;
+            }
+
+            // ---------- 通用模块加载器（带查找）----------
             function loadModule(moduleGlobal, moduleName, ...args) {
-                if (moduleGlobal === undefined) {
-                    throw new Error(`模块 ${moduleName} 未定义（undefined）。请检查 CDN 是否正确加载。`);
+                let mod = moduleGlobal;
+                if (mod === undefined) {
+                    // 尝试查找不区分大小写的版本
+                    mod = findGlobalModule(moduleName);
                 }
-                if (typeof moduleGlobal === 'function') {
-                    return moduleGlobal(...args);
+                if (mod === undefined) {
+                    throw new Error(`模块 ${moduleName} 未定义，请检查 CDN 加载`);
                 }
-                if (moduleGlobal.default && typeof moduleGlobal.default === 'function') {
-                    return moduleGlobal.default(...args);
+                if (typeof mod === 'function') {
+                    return mod(...args);
                 }
-                return moduleGlobal;
+                if (mod.default && typeof mod.default === 'function') {
+                    return mod.default(...args);
+                }
+                return mod;
+            }
+
+            // ---------- 降级方案：直接使用 ethers 连接（仅支持注入钱包）----------
+            async function connectWalletFallback() {
+                if (typeof window.ethereum === 'undefined') {
+                    alert('未检测到浏览器钱包（如 MetaMask）。请安装或使用 WalletConnect 模式（需正常加载 CDN）。');
+                    return;
+                }
+                try {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    provider = new ethers.BrowserProvider(window.ethereum);
+                    signer = await provider.getSigner();
+                    userAddress = await signer.getAddress();
+
+                    const network = await provider.getNetwork();
+                    if (network.chainId !== 56n) {
+                        alert('请切换到 BSC 主网（链 ID 56）');
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_switchEthereumChain',
+                                params: [{ chainId: CONFIG.BSC_CHAIN_ID }],
+                            });
+                        } catch (switchError) {
+                            console.error('切换网络失败', switchError);
+                        }
+                    }
+
+                    contract = new ethers.Contract(contractAddress, CONFIG.CONTRACT_ABI, signer);
+
+                    walletBtn.textContent = shortenAddress(userAddress);
+                    walletBtn.classList.add('connected');
+                    buyBtn.disabled = false;
+                    buyBtn.textContent = 'Buy Tokens';
+
+                    await refreshUI();
+                    updateEstimate();
+
+                    window.ethereum.on('accountsChanged', (accounts) => {
+                        if (accounts.length === 0) disconnectWallet();
+                        else window.location.reload();
+                    });
+                    window.ethereum.on('chainChanged', () => window.location.reload());
+
+                    cdnWarning.style.display = 'none'; // 隐藏警告
+                } catch (err) {
+                    console.error('降级连接失败', err);
+                    alert('连接失败：' + err.message);
+                }
+            }
+
+            function disconnectWallet() {
+                userAddress = null;
+                provider = null;
+                signer = null;
+                contract = null;
+                walletBtn.textContent = 'Connect Wallet';
+                walletBtn.classList.remove('connected');
+                buyBtn.disabled = true;
+                buyBtn.textContent = 'Connect Wallet First';
+                walletBalanceEl.textContent = '0 BNB';
+                userPurchasesEl.textContent = '0';
+                totalRaisedEl.textContent = '$0';
+                totalRaisedBNBEl.textContent = '0 BNB';
             }
 
             // ---------- 初始化 web3-onboard ----------
             async function initOnboard() {
                 try {
+                    // 尝试加载模块
                     const injected = loadModule(window.web3OnboardInjected, 'web3OnboardInjected');
                     const walletConnect = loadModule(window.web3OnboardWalletConnect, 'web3OnboardWalletConnect', {
                         projectId: CONFIG.WALLETCONNECT_PROJECT_ID,
                         requiredChains: [56],
                     });
 
-                    const coreModule = window.web3OnboardCore.default || window.web3OnboardCore;
-                    
-                    onboard = coreModule({
+                    let coreModule = window.web3OnboardCore;
+                    if (coreModule === undefined) {
+                        coreModule = findGlobalModule('web3OnboardCore');
+                    }
+                    if (coreModule === undefined) {
+                        throw new Error('web3OnboardCore 未定义');
+                    }
+                    const core = coreModule.default || coreModule;
+
+                    onboard = core({
                         wallets: [injected, walletConnect],
                         chains: [
                             {
@@ -619,30 +716,31 @@
                                 
                                 await refreshUI();
                                 updateEstimate();
+                                cdnWarning.style.display = 'none';
                             } else {
-                                wallet = null;
-                                userAddress = null;
-                                provider = null;
-                                signer = null;
-                                contract = null;
-                                walletBtn.textContent = 'Connect Wallet';
-                                walletBtn.classList.remove('connected');
-                                buyBtn.disabled = true;
-                                buyBtn.textContent = 'Connect Wallet First';
-                                walletBalanceEl.textContent = '0 BNB';
+                                disconnectWallet();
                             }
                         } catch (subErr) {
                             console.error('钱包状态订阅回调错误', subErr);
                         }
                     });
+
+                    // 初始化成功，隐藏警告
+                    cdnWarning.style.display = 'none';
                 } catch (initErr) {
-                    console.error('初始化 onboard 失败', initErr);
-                    alert('钱包连接初始化失败：' + initErr.message + '\n请检查网络或刷新页面重试。');
+                    console.error('初始化 onboard 失败，将使用降级方案', initErr);
+                    cdnWarning.style.display = 'block'; // 显示警告条
+                    // 不抛出错误，让用户可以选择降级方案
                 }
             }
 
             // 打开钱包选择模态框
             window.openWalletModal = async function() {
+                if (usingFallback) {
+                    // 如果已经降级，直接调用降级连接
+                    await connectWalletFallback();
+                    return;
+                }
                 try {
                     if (!onboard) {
                         await initOnboard();
@@ -650,11 +748,22 @@
                     if (onboard) {
                         await onboard.connectWallet();
                     } else {
-                        console.error('onboard 未正确初始化');
+                        // onboard 初始化失败，但未降级？尝试降级
+                        console.warn('onboard 未初始化，尝试降级连接');
+                        await connectWalletFallback();
                     }
                 } catch (err) {
                     console.error('连接钱包失败', err);
+                    // 尝试降级
+                    await connectWalletFallback();
                 }
+            };
+
+            // 用户手动点击降级链接
+            window.useFallbackWallet = function() {
+                usingFallback = true;
+                cdnWarning.style.display = 'none';
+                connectWalletFallback();
             };
 
             // ---------- 购买 ----------
@@ -711,7 +820,7 @@
             // 页面加载初始化
             window.addEventListener('load', async () => {
                 console.log('页面加载完成，开始初始化...');
-                await initOnboard();
+                await initOnboard(); // 尝试初始化 onboard，如果失败会显示警告
                 updateEstimate();
             });
 
