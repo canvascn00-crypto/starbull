@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- 添加 CSP 元标签，解决 GitHub Pages 的 eval 限制 -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src *; style-src * 'unsafe-inline'; img-src * data: blob:; font-src * data:;">
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bullforge - Next Generation Meme Coin on BSC</title>
@@ -11,7 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@web3-onboard/walletconnect@2.5.5/dist/index.umd.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
     <style>
-        /* 样式完全不变（略，保持您之前的样式即可） */
+        /* 样式完全不变（与之前一致） */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --primary: #FF3B3B; --primary-dark: #CC2E2E; --secondary: #FFD700; --accent: #FF6B00; --bg-dark: #0A0A0F; --bg-darker: #050508; --bg-card: rgba(20, 20, 30, 0.8); --border: rgba(255, 59, 59, 0.3); --text: #FFFFFF; --text-muted: #999999; }
         body { font-family: 'Rajdhani', sans-serif; background: var(--bg-darker); color: var(--text); overflow-x: hidden; line-height: 1.6; }
@@ -382,7 +385,7 @@
             let wallet;
             let contract;
             const contractAddress = CONFIG.CONTRACT_ADDRESS;
-            let currentPriceRate = 1_000_000n; // 默认为 bigint
+            let currentPriceRate = 1_000_000n;
 
             // DOM 元素
             const walletBtn = document.getElementById('walletBtn');
@@ -403,12 +406,10 @@
             const stakingAllocation = document.getElementById('stakingAllocation');
             const burnReserveAllocation = document.getElementById('burnReserveAllocation');
 
-            // 显示合约地址 (截断)
             if (contractAddress && contractAddress !== '0x0000000000000000000000000000000000000000') {
                 contractDisplay.textContent = contractAddress.slice(0,6) + '...' + contractAddress.slice(-4);
             }
 
-            // ---------- 工具函数 ----------
             function shortenAddress(addr) {
                 return addr ? addr.slice(0,6) + '...' + addr.slice(-4) : '';
             }
@@ -417,7 +418,7 @@
                 return parseFloat(ethers.formatEther(wei)).toFixed(4);
             }
 
-            function formatBFG(amount) { // amount 为 bigint 或 number, 以wei为单位
+            function formatBFG(amount) {
                 return ethers.formatUnits(amount, 18);
             }
 
@@ -440,7 +441,6 @@
                 if (txStatusDiv) txStatusDiv.style.display = 'none';
             }
 
-            // 更新所有UI数据
             async function refreshUI() {
                 if (!provider || !userAddress || !contract) return;
                 try {
@@ -475,7 +475,6 @@
                         currentStageEl.textContent = '1';
                     }
 
-                    // 更新静态分配数据
                     try {
                         const total = await contract.TOTAL_SUPPLY();
                         const totalFormatted = ethers.formatUnits(total, 18);
@@ -528,10 +527,8 @@
                 updateEstimate();
             };
 
-            // ---------- 钱包连接 ----------
             async function initOnboard() {
                 try {
-                    // 正确调用 UMD 模块：直接作为函数调用，不需要 .default
                     const injected = window.web3OnboardInjected(); 
                     const walletConnect = window.web3OnboardWalletConnect({
                         projectId: CONFIG.WALLETCONNECT_PROJECT_ID,
@@ -559,7 +556,6 @@
                         }
                     });
 
-                    // 订阅钱包状态
                     onboard.state.select('wallets').subscribe(async (wallets) => {
                         try {
                             if (wallets && wallets.length > 0) {
@@ -613,7 +609,6 @@
                 }
             };
 
-            // ---------- 购买 ----------
             window.buyTokens = async function() {
                 if (!signer || !contract) {
                     alert('请先连接钱包');
@@ -646,7 +641,6 @@
                 }
             };
 
-            // ---------- 滚动导航 ----------
             window.scrollTo = function(sectionId) {
                 const el = document.getElementById(sectionId);
                 if (el) {
@@ -663,7 +657,6 @@
                 }
             };
 
-            // 初始化
             window.addEventListener('load', async () => {
                 console.log('页面加载完成，开始初始化...');
                 await initOnboard();
