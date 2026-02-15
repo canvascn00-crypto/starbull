@@ -11,6 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@web3-onboard/walletconnect@2.5.5/dist/index.umd.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
     <style>
+        /* 样式与之前保持一致，未作改动 */
         * {
             margin: 0;
             padding: 0;
@@ -42,25 +43,20 @@
             font-family: 'Orbitron', sans-serif;
         }
 
-        /* 滚动条 */
         ::-webkit-scrollbar {
             width: 10px;
         }
-
         ::-webkit-scrollbar-track {
             background: var(--bg-dark);
         }
-
         ::-webkit-scrollbar-thumb {
             background: var(--primary);
             border-radius: 5px;
         }
-
         ::-webkit-scrollbar-thumb:hover {
             background: var(--primary-dark);
         }
 
-        /* 导航栏 */
         header {
             position: fixed;
             top: 0;
@@ -174,7 +170,6 @@
             box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4);
         }
 
-        /* 首页 */
         .hero {
             min-height: 100vh;
             display: flex;
@@ -331,7 +326,6 @@
             background: rgba(255, 59, 59, 0.1);
         }
 
-        /* 通用区块 */
         section {
             padding: 120px 0;
             position: relative;
@@ -369,7 +363,6 @@
             margin: 0 auto;
         }
 
-        /* 特性卡片网格 */
         .features-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -433,7 +426,6 @@
             line-height: 1.7;
         }
 
-        /* 代币经济学 */
         .tokenomics-container {
             display: grid;
             grid-template-columns: 1fr 1.5fr;
@@ -565,7 +557,6 @@
             font-family: 'Orbitron', sans-serif;
         }
 
-        /* 预售卡片 */
         .presale-container {
             display: grid;
             grid-template-columns: 1fr 1.5fr;
@@ -861,7 +852,6 @@
             font-size: 14px;
         }
 
-        /* 路线图 */
         .roadmap-container {
             max-width: 900px;
             margin: 0 auto;
@@ -962,7 +952,6 @@
             background: #22C55E;
         }
 
-        /* 页脚 */
         footer {
             background: var(--bg-dark);
             border-top: 1px solid var(--border);
@@ -1079,7 +1068,6 @@
             font-size: 15px;
         }
 
-        /* 响应式 */
         @media (max-width: 1200px) {
             .features-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -1382,7 +1370,7 @@
                         </div>
                         <div class="estimate-row">
                             <span class="estimate-label">Current Stage</span>
-                            <span style="font-weight: 700; font-family: 'Orbitron', sans-serif;">1</span>
+                            <span style="font-weight: 700; font-family: 'Orbitron', sans-serif;" id="currentStage">1</span>
                         </div>
                     </div>
 
@@ -1490,4 +1478,305 @@
                     <h4 class="footer-column-title">Resources</h4>
                     <a class="footer-link" href="#">Whitepaper</a>
                     <a class="footer-link" href="#">Audit Report</a>
-                    <a class="footer
+                    <a class="footer-link" href="#">Contract</a>
+                    <a class="footer-link" href="#">GitHub</a>
+                </div>
+                <div>
+                    <h4 class="footer-column-title">Contract</h4>
+                    <div class="contract-card">
+                        <div class="contract-label">BFG Token</div>
+                        <div class="contract-address" id="contractAddressDisplay" onclick="copyContract()">0x0000...0000</div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                © 2025 Bullforge. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        (function() {
+            // ---------- 配置项 ----------
+            const CONFIG = {
+                // 请替换为您的真实预售合约地址 (BSC主网)
+                CONTRACT_ADDRESS: '0x0000000000000000000000000000000000000000', // <-- 务必替换
+                BSC_CHAIN_ID: '0x38', // 56 的十六进制
+                BSC_RPC: 'https://bsc-dataseed.binance.org/',
+                WALLETCONNECT_PROJECT_ID: 'YOUR_PROJECT_ID', // 从 walletconnect.com 申请
+                // 最小ABI (包含预售必要方法)
+                CONTRACT_ABI: [
+                    "function totalRaised() view returns (uint256)",
+                    "function currentPrice() view returns (uint256)", // 返回每BNB能买多少BFG (wei风格, 需除以1e18? 这里简化)
+                    "function getUserPurchased(address) view returns (uint256)",
+                    "function buy() payable",
+                    "function stage() view returns (uint8)"
+                ]
+            };
+
+            // ---------- 全局变量 ----------
+            let provider, signer, userAddress;
+            let onboard; // web3-onboard实例
+            let wallet;   // 当前连接的钱包
+            let contract;
+            let contractAddress = CONFIG.CONTRACT_ADDRESS;
+            let currentPriceRate = 1_000_000; // 默认1 BNB = 1,000,000 BFG
+
+            // DOM 元素
+            const walletBtn = document.getElementById('walletBtn');
+            const totalRaisedEl = document.getElementById('totalRaised');
+            const totalRaisedBNBEl = document.getElementById('totalRaisedBNB');
+            const currentPriceEl = document.getElementById('currentPrice');
+            const userPurchasesEl = document.getElementById('userPurchases');
+            const walletBalanceEl = document.getElementById('walletBalance');
+            const bnbInput = document.getElementById('bnbInput');
+            const estimateValueEl = document.getElementById('estimateValue');
+            const buyBtn = document.getElementById('buyBtn');
+            const txStatusDiv = document.getElementById('txStatus');
+            const currentStageEl = document.getElementById('currentStage');
+            const contractDisplay = document.getElementById('contractAddressDisplay');
+
+            // 显示合约地址 (截断)
+            if (contractAddress && contractAddress !== '0x0000000000000000000000000000000000000000') {
+                contractDisplay.textContent = contractAddress.slice(0,6) + '...' + contractAddress.slice(-4);
+            } else {
+                contractDisplay.textContent = 'Not set';
+            }
+
+            // ---------- 工具函数 ----------
+            function shortenAddress(addr) {
+                return addr ? addr.slice(0,6) + '...' + addr.slice(-4) : '';
+            }
+
+            function formatBNB(wei) {
+                return parseFloat(ethers.formatEther(wei)).toFixed(4);
+            }
+
+            function formatBFG(amount) {
+                return parseFloat(ethers.formatUnits(amount, 18)).toLocaleString();
+            }
+
+            // 显示交易状态
+            function showTxStatus(status, message, txHash = '') {
+                txStatusDiv.style.display = 'flex';
+                txStatusDiv.className = `tx-status ${status}`;
+                let icon = '';
+                if (status === 'pending') icon = '⏳';
+                else if (status === 'success') icon = '✅';
+                else icon = '❌';
+                txStatusDiv.innerHTML = `
+                    <span class="tx-status-icon">${icon}</span>
+                    <span class="tx-status-text">${message}</span>
+                    ${txHash ? `<a href="https://bscscan.com/tx/${txHash}" target="_blank" class="tx-status-link">View on BscScan</a>` : ''}
+                `;
+            }
+
+            function hideTxStatus() {
+                txStatusDiv.style.display = 'none';
+            }
+
+            // 更新所有UI数据
+            async function refreshUI() {
+                if (!provider || !userAddress) return;
+                try {
+                    // 更新余额
+                    const balance = await provider.getBalance(userAddress);
+                    walletBalanceEl.textContent = formatBNB(balance) + ' BNB';
+
+                    // 如果有合约实例
+                    if (contract && contractAddress !== '0x0000000000000000000000000000000000000000') {
+                        // 总筹集 (假设返回wei)
+                        const raisedWei = await contract.totalRaised();
+                        const raisedBNB = ethers.formatEther(raisedWei);
+                        totalRaisedBNBEl.textContent = parseFloat(raisedBNB).toFixed(2) + ' BNB';
+                        // 简单估算USD (假设BNB=600$)
+                        totalRaisedEl.textContent = '$' + (parseFloat(raisedBNB) * 600).toLocaleString();
+
+                        // 当前价格 (rate)
+                        try {
+                            const price = await contract.currentPrice();
+                            // 假设price返回的是 每BNB多少BFG (单位为ether, 即 1e18)
+                            currentPriceRate = parseFloat(ethers.formatUnits(price, 18));
+                            currentPriceEl.textContent = currentPriceRate.toLocaleString();
+                        } catch (e) {
+                            console.warn('使用默认价格');
+                        }
+
+                        // 用户购买量
+                        const purchased = await contract.getUserPurchased(userAddress);
+                        userPurchasesEl.textContent = ethers.formatUnits(purchased, 2); // 简略显示
+
+                        // 阶段
+                        try {
+                            const stageNum = await contract.stage();
+                            currentStageEl.textContent = stageNum.toString();
+                        } catch (e) {}
+                    } else {
+                        // 模拟数据
+                        totalRaisedEl.textContent = '$0';
+                        totalRaisedBNBEl.textContent = '0 BNB';
+                        currentPriceEl.textContent = '1,000,000';
+                        userPurchasesEl.textContent = '0';
+                        currentStageEl.textContent = '1';
+                    }
+                } catch (err) {
+                    console.error('刷新UI失败', err);
+                }
+            }
+
+            // 估算BFG
+            function updateEstimate() {
+                const bnb = parseFloat(bnbInput.value) || 0;
+                const rate = currentPriceRate;
+                const bfg = bnb * rate;
+                estimateValueEl.textContent = bfg.toLocaleString() + ' BFG';
+            }
+
+            // 设置快速金额
+            window.setAmount = function(val) {
+                bnbInput.value = val;
+                updateEstimate();
+            };
+
+            // 设置最大余额
+            window.setMaxBalance = async function() {
+                if (!provider || !userAddress) return;
+                const balance = await provider.getBalance(userAddress);
+                const bnb = parseFloat(ethers.formatEther(balance));
+                bnbInput.value = bnb.toFixed(4);
+                updateEstimate();
+            };
+
+            // ---------- 钱包连接 ----------
+            async function initOnboard() {
+                const injected = window.web3OnboardInjected.default(); // 注意CDN导出方式
+                const walletConnect = window.web3OnboardWalletConnect.default({
+                    projectId: CONFIG.WALLETCONNECT_PROJECT_ID,
+                    requiredChains: [56],
+                });
+
+                onboard = window.web3OnboardCore.default({
+                    wallets: [injected, walletConnect],
+                    chains: [
+                        {
+                            id: CONFIG.BSC_CHAIN_ID,
+                            token: 'BNB',
+                            label: 'Binance Smart Chain',
+                            rpcUrl: CONFIG.BSC_RPC
+                        }
+                    ],
+                    appMetadata: {
+                        name: 'Bullforge Presale',
+                        icon: '<svg>...</svg>',
+                        description: 'Buy $BFG tokens',
+                    },
+                    accountCenter: {
+                        desktop: { enabled: false },
+                        mobile: { enabled: false }
+                    }
+                });
+
+                // 订阅钱包状态
+                onboard.state.select('wallets').subscribe((wallets) => {
+                    if (wallets && wallets.length > 0) {
+                        wallet = wallets[0];
+                        userAddress = wallet.accounts[0].address;
+                        provider = new ethers.BrowserProvider(wallet.provider);
+                        provider.getSigner().then(s => {
+                            signer = s;
+                            if (contractAddress !== '0x0000000000000000000000000000000000000000') {
+                                contract = new ethers.Contract(contractAddress, CONFIG.CONTRACT_ABI, signer);
+                            }
+                            walletBtn.textContent = shortenAddress(userAddress);
+                            walletBtn.classList.add('connected');
+                            buyBtn.disabled = false;
+                            buyBtn.textContent = 'Buy Tokens';
+                            refreshUI();
+                        });
+                    } else {
+                        wallet = null;
+                        userAddress = null;
+                        provider = null;
+                        signer = null;
+                        contract = null;
+                        walletBtn.textContent = 'Connect Wallet';
+                        walletBtn.classList.remove('connected');
+                        buyBtn.disabled = true;
+                        buyBtn.textContent = 'Connect Wallet First';
+                        walletBalanceEl.textContent = '0 BNB';
+                    }
+                });
+            }
+
+            window.openWalletModal = async function() {
+                if (!onboard) await initOnboard();
+                try {
+                    await onboard.connectWallet();
+                } catch (err) {
+                    console.error('连接失败', err);
+                }
+            };
+
+            // ---------- 购买 ----------
+            window.buyTokens = async function() {
+                if (!signer || !contract) {
+                    alert('请先连接钱包');
+                    return;
+                }
+                const bnbAmount = parseFloat(bnbInput.value);
+                if (!bnbAmount || bnbAmount <= 0) {
+                    alert('输入有效BNB数量');
+                    return;
+                }
+                try {
+                    hideTxStatus();
+                    showTxStatus('pending', '交易进行中...');
+
+                    const tx = await contract.buy({
+                        value: ethers.parseEther(bnbAmount.toString())
+                    });
+                    showTxStatus('pending', '等待确认...', tx.hash);
+                    await tx.wait();
+                    showTxStatus('success', '购买成功！', tx.hash);
+                    refreshUI();
+                    bnbInput.value = '';
+                    updateEstimate();
+                } catch (err) {
+                    console.error(err);
+                    showTxStatus('error', err.reason || err.message || '交易失败');
+                }
+            };
+
+            // ---------- 滚动导航 ----------
+            window.scrollTo = function(sectionId) {
+                const el = document.getElementById(sectionId);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                }
+            };
+
+            // 复制合约地址
+            window.copyContract = function() {
+                if (contractAddress && contractAddress !== '0x0000000000000000000000000000000000000000') {
+                    navigator.clipboard.writeText(contractAddress);
+                    alert('合约地址已复制');
+                } else {
+                    alert('合约地址未配置');
+                }
+            };
+
+            // 初始化
+            window.addEventListener('load', async () => {
+                await initOnboard();
+                // 尝试自动连接 (可选)
+                // 设置默认价格
+                updateEstimate();
+                // 如果有之前连接, onboard会自动恢复?
+            });
+
+            // 输入监听
+            bnbInput.addEventListener('input', updateEstimate);
+        })();
+    </script>
+</body>
+</html>
