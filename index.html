@@ -1,15 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bullforge | The Future isn't Just Bullish. It's Bullforge.</title>
 
-  <!-- 核心依赖：ethers 必须在最前，因为 Web3Modal 依赖它 -->
+  <!-- ✅ 保留 ethers -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <!-- Web3Modal & WalletConnect 依赖（Web3Modal v1 + WalletConnect Provider v1） -->
-  <script src="https://cdn.jsdelivr.net/npm/web3modal@1.9.12/dist/index.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
 
   <!-- 字体 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,24 +43,33 @@
     .navbar-content { display: flex; justify-content: space-between; align-items: center; }
     .navbar-logo { font-size: 28px; font-weight: 900; color: var(--gold-primary); letter-spacing: -0.5px; }
     .navbar-links { display: flex; gap: 32px; align-items: center; }
-    .navbar-links a {
-      color: var(--text-gray); text-decoration: none; font-weight: 500; transition: color 0.3s ease;
-    }
+    .navbar-links a { color: var(--text-gray); text-decoration: none; font-weight: 500; transition: color 0.3s ease; }
     .navbar-links a:hover { color: var(--gold-primary); }
 
     #walletConnectBtn {
-      padding: 10px 24px; background: var(--gold-primary); color: var(--dark-bg);
-      border: none; border-radius: 50px; font-weight: 700; cursor: pointer;
+      padding: 10px 24px;
+      background: var(--gold-primary);
+      color: var(--dark-bg);
+      border: none;
+      border-radius: 50px;
+      font-weight: 700;
+      cursor: pointer;
       transition: all 0.3s ease;
     }
     #walletConnectBtn:hover:not(:disabled) { box-shadow: 0 0 24px rgba(255, 215, 0, 0.4); transform: scale(1.03); }
     #walletConnectBtn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
     #disconnectBtn {
-      padding: 8px 16px; background: transparent; color: var(--gold-primary);
-      border: 1px solid var(--gold-primary); border-radius: 50px;
-      font-weight: 600; font-size: 14px; cursor: pointer;
-      transition: all 0.3s ease; margin-left: 12px;
+      padding: 8px 16px;
+      background: transparent;
+      color: var(--gold-primary);
+      border: 1px solid var(--gold-primary);
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-left: 12px;
     }
     #disconnectBtn:hover { background: rgba(255, 215, 0, 0.1); }
 
@@ -71,51 +77,78 @@
     .hero {
       min-height: 100vh;
       padding-top: 120px;
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
       text-align: center;
       background: linear-gradient(180deg, #0A0500 0%, var(--dark-bg) 100%);
-      position: relative; overflow: hidden;
+      position: relative;
+      overflow: hidden;
     }
     .hero-bg-glow {
-      position: absolute; top: -50%; left: 50%; transform: translateX(-50%);
-      width: 1200px; height: 1200px;
+      position: absolute;
+      top: -50%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1200px;
+      height: 1200px;
       background: radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, transparent 70%);
       z-index: 0;
     }
     .hero-content { position: relative; z-index: 1; max-width: 900px; }
     .hero-title {
-      font-size: 72px; font-weight: 900; line-height: 1.1; margin-bottom: 16px;
+      font-size: 72px;
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 16px;
       background: linear-gradient(180deg, var(--gold-primary) 0%, var(--gold-secondary) 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     .hero-slogan { font-size: 24px; color: var(--text-gray); margin-bottom: 48px; font-weight: 400; }
 
     /* 预售核心数据卡片 */
     .presale-stats-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      gap: 16px; margin-bottom: 32px; width: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+      width: 100%;
     }
     .stat-card {
-      background: var(--dark-card); border: 1px solid var(--dark-border);
-      border-radius: 12px; padding: 20px; text-align: left;
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: left;
     }
     .stat-label {
-      font-size: 13px; color: var(--text-muted); text-transform: uppercase;
-      letter-spacing: 0.5px; margin-bottom: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
     }
     .stat-value { font-size: 24px; font-weight: 700; color: var(--gold-primary); }
 
     /* 倒计时 */
     .countdown-wrapper { margin: 32px 0; }
     .countdown-title {
-      font-size: 14px; color: var(--text-gray);
-      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;
+      font-size: 14px;
+      color: var(--text-gray);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
     }
     .countdown-grid { display: flex; gap: 16px; justify-content: center; }
     .countdown-box {
-      background: var(--dark-card); border: 1px solid var(--gold-primary);
-      border-radius: 12px; min-width: 100px; padding: 16px 8px;
+      background: var(--dark-card);
+      border: 1px solid var(--gold-primary);
+      border-radius: 12px;
+      min-width: 100px;
+      padding: 16px 8px;
     }
     .countdown-number { font-size: 40px; font-weight: 900; color: var(--gold-primary); line-height: 1; }
     .countdown-text { font-size: 12px; color: var(--text-gray); margin-top: 8px; text-transform: uppercase; }
@@ -125,8 +158,12 @@
     .progress-header { display: flex; justify-content: space-between; margin-bottom: 12px; }
     .progress-header span { font-size: 14px; color: var(--text-gray); }
     .progress-bar-container {
-      width: 100%; height: 12px; background: var(--dark-card);
-      border-radius: 100px; overflow: hidden; border: 1px solid var(--dark-border);
+      width: 100%;
+      height: 12px;
+      background: var(--dark-card);
+      border-radius: 100px;
+      overflow: hidden;
+      border: 1px solid var(--dark-border);
     }
     .progress-bar-fill {
       height: 100%;
@@ -147,7 +184,13 @@
       width: 100%;
     }
     .form-input-group { margin-bottom: 16px; }
-    .form-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: var(--text-gray); }
+    .form-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: var(--text-gray);
+    }
     .form-input {
       width: 100%;
       padding: 16px;
@@ -160,15 +203,17 @@
       transition: border-color 0.3s ease;
     }
     .form-input:focus { outline: none; border-color: var(--gold-primary); }
-
     .form-select {
-      width: 100%; padding: 16px; background: var(--dark-bg);
+      width: 100%;
+      padding: 16px;
+      background: var(--dark-bg);
       border: 1px solid var(--dark-border);
-      border-radius: 12px; color: var(--text-white);
-      font-size: 16px; transition: border-color 0.3s ease;
+      border-radius: 12px;
+      color: var(--text-white);
+      font-size: 16px;
+      transition: border-color 0.3s ease;
     }
     .form-select:focus { outline: none; border-color: var(--gold-primary); }
-
     .token-estimate { text-align: left; font-size: 14px; color: var(--text-gray); margin: 12px 0 24px; }
 
     .buy-button {
@@ -201,15 +246,18 @@
       margin-top: 12px;
     }
     .btn-secondary:hover:not(:disabled) { background: rgba(255, 215, 0, 0.1); }
-
     .btn-small { width: auto; padding: 10px 20px; font-size: 14px; margin: 5px; }
 
     /* ==================== 通用板块样式 ==================== */
     .section { padding: 120px 0; position: relative; }
     .section-header { text-align: center; margin-bottom: 80px; }
     .section-subtitle {
-      font-size: 14px; text-transform: uppercase; letter-spacing: 2px;
-      color: var(--gold-primary); margin-bottom: 12px; font-weight: 700;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--gold-primary);
+      margin-bottom: 12px;
+      font-weight: 700;
     }
     .section-title { font-size: 56px; font-weight: 900; line-height: 1.1; margin-bottom: 16px; }
     .section-desc { font-size: 18px; color: var(--text-gray); max-width: 700px; margin: 0 auto; }
@@ -255,8 +303,18 @@
 
     /* ==================== 我的资产板块 ==================== */
     .dashboard-section { background: var(--dark-card); }
-    .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 40px; }
-    .dashboard-card { background: var(--dark-bg); border: 1px solid var(--dark-border); border-radius: 16px; padding: 24px; }
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    .dashboard-card {
+      background: var(--dark-bg);
+      border: 1px solid var(--dark-border);
+      border-radius: 16px;
+      padding: 24px;
+    }
     .dashboard-label { font-size: 13px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
     .dashboard-value { font-size: 28px; font-weight: 700; color: var(--gold-primary); }
 
@@ -312,12 +370,21 @@
       position: relative;
     }
     .roadmap-phase {
-      font-size: 13px; text-transform: uppercase; letter-spacing: 1px;
-      color: var(--gold-primary); font-weight: 700; margin-bottom: 12px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--gold-primary);
+      font-weight: 700;
+      margin-bottom: 12px;
     }
     .roadmap-title { font-size: 24px; font-weight: 800; margin-bottom: 20px; }
     .roadmap-list { list-style: none; }
-    .roadmap-list li { padding: 8px 0; color: var(--text-gray); position: relative; padding-left: 24px; }
+    .roadmap-list li {
+      padding: 8px 0;
+      color: var(--text-gray);
+      position: relative;
+      padding-left: 24px;
+    }
     .roadmap-list li::before { content: "✦"; position: absolute; left: 0; color: var(--gold-primary); }
 
     /* ==================== Audit & FAQ 板块 ==================== */
@@ -362,8 +429,11 @@
     /* ==================== 合作伙伴 ==================== */
     .partners-section { padding: 60px 0; background: var(--dark-card); }
     .partners-grid {
-      display: flex; flex-wrap: wrap; gap: 32px;
-      justify-content: center; align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 32px;
+      justify-content: center;
+      align-items: center;
     }
     .partner-logo { font-size: 18px; font-weight: 700; color: var(--text-muted); transition: color 0.3s ease; }
     .partner-logo:hover { color: var(--gold-primary); }
@@ -380,8 +450,12 @@
 
     /* ==================== 通知弹窗 ==================== */
     .notification {
-      position: fixed; top: 100px; right: 24px; max-width: 400px;
-      padding: 20px 24px; background: var(--dark-card);
+      position: fixed;
+      top: 100px;
+      right: 24px;
+      max-width: 400px;
+      padding: 20px 24px;
+      background: var(--dark-card);
       border: 1px solid var(--gold-primary);
       border-radius: 12px;
       z-index: 9999;
@@ -395,19 +469,15 @@
 
     /* ==================== 加载动画 ==================== */
     .loading-spinner {
-      display: inline-block; width: 20px; height: 20px;
+      display: inline-block;
+      width: 20px;
+      height: 20px;
       border: 2px solid var(--text-muted);
       border-radius: 50%;
       border-top-color: var(--gold-primary);
       animation: spin 1s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    .burn-animation { animation: burnPulse 2s ease-in-out infinite; }
-    @keyframes burnPulse {
-      0%, 100% { text-shadow: 0 0 12px var(--gold-primary); }
-      50% { text-shadow: 0 0 32px var(--gold-primary), 0 0 64px var(--gold-secondary); }
-    }
 
     /* ==================== 响应式适配 ==================== */
     @media (max-width: 768px) {
@@ -662,7 +732,6 @@
         </div>
       </div>
 
-      <!-- 新增：持仓价值与交易历史卡片 -->
       <div class="dashboard-card" id="portfolioCard" style="display: none; margin-bottom: 24px;">
         <div class="dashboard-label">💰 持仓价值</div>
         <div class="dashboard-value" id="portfolioValue">0 BNB</div>
@@ -678,7 +747,6 @@
         </tbody>
       </table>
 
-      <!-- 质押功能 (UI演示) -->
       <div class="buy-form-card" id="stakingCard" style="display: none; margin: 0 auto; max-width: 800px;">
         <h3 style="margin-bottom: 24px; color: var(--gold-primary);">Stake Your $BULL (70% APY)</h3>
         <div class="form-input-group">
@@ -699,7 +767,6 @@
         <button class="btn-secondary" id="unstakeButton" style="display: none;" disabled>Unstake My Tokens</button>
       </div>
 
-      <!-- 推荐码功能 -->
       <div class="referral-box" id="referralBox" style="display: none;">
         <h3 style="margin-bottom: 16px; color: var(--gold-primary);">Your Forge-To-Earn Referral Link</h3>
         <p style="color: var(--text-gray); margin-bottom: 16px;">Share this link to earn 10% of every buy made through it, and your referral gets a 10% bonus!</p>
@@ -803,19 +870,19 @@
         <div class="faq-item">
           <div class="faq-question">What is Bullforge ($BULL)? <span>✦</span></div>
           <div class="faq-answer">
-            Bullforge is a BNB Chain-based memecoin forged in the chaos of the blockchain — a living myth designed to turn red candles into rocket fuel. It’s powered by progressive pricing, token burns, 70% APY staking rewards, and a referral system that rewards conviction.
+            Bullforge is a BNB Chain-based memecoin forged in the chaos of the blockchain — a living myth designed to turn red candles into rocket fuel.
           </div>
         </div>
         <div class="faq-item">
           <div class="faq-question">How does the presale work? <span>✦</span></div>
           <div class="faq-answer">
-            Every 48 hours or once $100,000 is raised — whichever comes first — the price of $BULL automatically climbs higher. The journey unfolds across multiple stages, and with every stage progression, a Forge Burn Event is triggered, permanently reducing supply and fueling scarcity.
+            Every 48 hours or once $100,000 is raised — whichever comes first — the price of $BULL automatically climbs higher.
           </div>
         </div>
         <div class="faq-item">
           <div class="faq-question">Is there a minimum buy amount? <span>✦</span></div>
           <div class="faq-answer">
-            No, you can buy any amount of $BULL. However, a minimum of $50 during the presale is required to unlock your referral code and start earning Forge-To-Earn rewards.
+            No, you can buy any amount of $BULL. However, a minimum of $50 during the presale is required to unlock your referral code.
           </div>
         </div>
         <div class="faq-item">
@@ -827,13 +894,13 @@
         <div class="faq-item">
           <div class="faq-question">When can I claim my tokens? <span>✦</span></div>
           <div class="faq-answer">
-            Token claim will be available immediately after the presale ends and liquidity is added to the DEX. You will be able to claim your purchased $BULL directly from this website.
+            Token claim will be available immediately after the presale ends and liquidity is added to the DEX.
           </div>
         </div>
         <div class="faq-item">
           <div class="faq-question">How does the referral program work? <span>✦</span></div>
           <div class="faq-answer">
-            Share your unique referral link, and you'll earn 10% of every buy made through your link. The person you refer also gets a 10% bonus in $BULL tokens. Rewards vest after the presale ends.
+            Share your unique referral link, and you'll earn 10% of every buy made through your link. The person you refer also gets a 10% bonus.
           </div>
         </div>
       </div>
@@ -843,9 +910,7 @@
   <!-- 合作伙伴区域 -->
   <section class="partners-section">
     <div class="container">
-      <div class="section-header">
-        <div class="section-subtitle">Powered By</div>
-      </div>
+      <div class="section-header"><div class="section-subtitle">Powered By</div></div>
       <div class="partners-grid">
         <div class="partner-logo">BNB Chain</div>
         <div class="partner-logo">MetaMask</div>
@@ -877,12 +942,13 @@
       <div class="footer-copyright">© 2026 Bullforge. All rights reserved.</div>
     </div>
   </footer>
+  <script type="module">
+    import EthereumProvider from "https://esm.sh/@walletconnect/ethereum-provider@2.15.0";
 
-  <script>
     // ==================== 核心配置 ====================
     const CONFIG = {
       CONTRACT_ADDRESS: "0x16D6c1a692AaC51a3821bA2903115d4600649F07",
-      // 注意：WalletConnect v1 不用 projectId，这里保留也不会用到
+      // ✅ WalletConnect v2 需要 projectId（你已有这个值）
       WALLETCONNECT_PROJECT_ID: "fe819ed06d9e5489f764fc7b1dae1c4e",
       BSC_RPC: "https://bsc-dataseed.binance.org/",
       CHAIN_ID: 56,
@@ -959,14 +1025,13 @@
 
     // 全局变量
     let provider, signer, contract, userAddress;
+    let wcProvider = null; // WalletConnect v2 provider
     let currentRate = 0;
     let totalRaisedBNB = 0;
     let hardcapBNB = 2000;
     let stageEndTimestamp = 0;
     let countdownInterval;
-    let web3Modal;
 
-    // 显示通知
     function showNotification(title, desc, isError = false) {
       notifTitle.innerText = title;
       notifDesc.innerText = desc;
@@ -996,7 +1061,6 @@
       secondsSpan.innerText = s < 10 ? '0' + s : s;
     }
 
-    // 加载用户交易历史
     async function loadUserHistory() {
       if (!contract || !userAddress) return;
       try {
@@ -1060,7 +1124,6 @@
         let endTime = await contract.stageEndTime().catch(() => null);
         if (endTime) stageEndTimestamp = endTime.toNumber();
         else stageEndTimestamp = Math.floor(Date.now() / 1000) + 48 * 3600;
-
         updateCountdown();
 
         let totalSupplyWei = await contract.totalSupply().catch(() => null);
@@ -1112,7 +1175,6 @@
         }
 
         estimateTokens();
-
       } catch (e) {
         console.warn('合约读取失败，使用模拟数据', e);
         totalRaisedSpan.innerText = '125.45 BNB';
@@ -1138,78 +1200,52 @@
       tokenEstimate.innerText = `You will receive approx. ${estimated.toFixed(2)} $BULL`;
     }
 
-    // ✅ 修复后的 Web3Modal 初始化（WalletConnect v1 正确写法）
-    function initWeb3Modal() {
-      const WCProvider =
-        (window.WalletConnectProvider && window.WalletConnectProvider.default) ||
-        window.WalletConnectProvider;
-
-      if (!WCProvider) {
-        console.error("WalletConnectProvider not found on window. Check script loading order.");
-        showNotification("Init Error", "WalletConnect provider failed to load", true);
-        return;
-      }
-
-      const providerOptions = {
-        walletconnect: {
-          package: WCProvider,
-          options: {
-            rpc: {
-              [CONFIG.CHAIN_ID]: CONFIG.BSC_RPC
-            },
-            chainId: CONFIG.CHAIN_ID,
-            bridge: "https://bridge.walletconnect.org",
-            qrcodeModalOptions: {
-              mobileLinks: ["metamask", "trust", "rainbow", "argent", "imtoken"]
-            }
-          }
-        }
-      };
-
-      web3Modal = new window.Web3Modal.default({
-        cacheProvider: true,
-        providerOptions,
-        theme: "dark",
-        disableInjectedProvider: false
-      });
-    }
-
-    // 连接钱包
+    // ✅ 连接钱包：优先 injected，否则 WalletConnect v2（二维码）
     async function connectWallet() {
       showNotification("Connecting...", "Opening wallet selector", false);
 
-      if (!web3Modal) initWeb3Modal();
-      if (!web3Modal) return; // init failed
-
       try {
-        const instance = await web3Modal.connect();
-
-        provider = new ethers.providers.Web3Provider(instance);
-
-        instance.on("accountsChanged", (accounts) => {
-          if (accounts.length === 0) {
-            window.location.reload();
-          } else {
-            userAddress = accounts[0];
-            connectBtn.innerText = userAddress.slice(0, 6) + '...' + userAddress.slice(-4);
-            disconnectBtn.style.display = 'inline-block';
-            refreshContractData();
-          }
-        });
-
-        instance.on("chainChanged", () => {
-          window.location.reload();
-        });
-
-        instance.on("disconnect", () => {
-          showNotification('Disconnected', 'Wallet disconnected', false);
-          web3Modal.clearCachedProvider();
-          window.location.reload();
-        });
+        // 1) injected provider 优先（手机钱包内置浏览器/MetaMask插件）
+        if (window.ethereum) {
+          await window.ethereum.request({ method: "eth_requestAccounts" });
+          provider = new ethers.providers.Web3Provider(window.ethereum);
+        } else {
+          // 2) WalletConnect v2
+          wcProvider = await EthereumProvider.init({
+            projectId: CONFIG.WALLETCONNECT_PROJECT_ID,
+            chains: [CONFIG.CHAIN_ID],
+            optionalChains: [CONFIG.CHAIN_ID],
+            rpcMap: { [CONFIG.CHAIN_ID]: CONFIG.BSC_RPC },
+            showQrModal: true
+          });
+          await wcProvider.connect();
+          provider = new ethers.providers.Web3Provider(wcProvider);
+        }
 
         signer = provider.getSigner();
         userAddress = await signer.getAddress();
         contract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+        const baseProvider = wcProvider || window.ethereum;
+
+        if (baseProvider && baseProvider.on) {
+          baseProvider.on("accountsChanged", (accounts) => {
+            if (!accounts || accounts.length === 0) window.location.reload();
+            else {
+              userAddress = accounts[0];
+              connectBtn.innerText = userAddress.slice(0, 6) + '...' + userAddress.slice(-4);
+              disconnectBtn.style.display = 'inline-block';
+              refreshContractData();
+            }
+          });
+
+          baseProvider.on("chainChanged", () => window.location.reload());
+
+          baseProvider.on("disconnect", () => {
+            showNotification("Disconnected", "Wallet disconnected", false);
+            window.location.reload();
+          });
+        }
 
         connectBtn.innerText = userAddress.slice(0, 6) + '...' + userAddress.slice(-4);
         disconnectBtn.style.display = 'inline-block';
@@ -1228,23 +1264,22 @@
         countdownInterval = setInterval(updateCountdown, 1000);
 
         showNotification("Connected", "Wallet connected successfully", false);
-
-      } catch (error) {
-        console.error(error);
-        const msg = (error && (error.message || error.toString())) ? (error.message || error.toString()) : "Unknown error";
-        showNotification('Connection Failed', msg, true);
+      } catch (e) {
+        console.error(e);
+        showNotification("Connection Failed", e?.message || String(e), true);
       }
     }
 
-    // 断开钱包
     async function disconnectWallet() {
-      if (web3Modal) {
-        web3Modal.clearCachedProvider();
+      try {
+        if (wcProvider) await wcProvider.disconnect();
+      } catch (e) {
+        console.warn(e);
+      } finally {
         window.location.reload();
       }
     }
 
-    // 购买
     async function buyTokens() {
       if (!signer || !contract) return;
       let amount = parseFloat(bnbAmountInput.value);
@@ -1265,11 +1300,10 @@
         showNotification('Success', 'You bought $BULL tokens!', false);
         refreshContractData();
       } catch (e) {
-        showNotification('Transaction Failed', e.message || String(e), true);
+        showNotification('Transaction Failed', e?.message || String(e), true);
       }
     }
 
-    // Claim 代币
     async function claimTokens() {
       if (!signer || !contract) return;
       try {
@@ -1279,7 +1313,7 @@
         showNotification('Success', 'Tokens claimed!', false);
         refreshContractData();
       } catch (e) {
-        showNotification('Claim Failed', e.message || String(e), true);
+        showNotification('Claim Failed', e?.message || String(e), true);
       }
     }
 
@@ -1297,15 +1331,8 @@
     buyButton.addEventListener('click', buyTokens);
     claimButton.addEventListener('click', claimTokens);
 
-    // 页面加载
-    initWeb3Modal();
-    if (web3Modal && web3Modal.cachedProvider) {
-      connectWallet();
-    } else {
-      // 没连钱包也能读合约（这里你的 contract 需要 signer 才能建，所以会走模拟数据）
-      // 你如果希望未连接时也能读链上数据，可以改成 JsonRpcProvider + readOnly contract（我也能帮你补）
-      refreshContractData();
-    }
+    // 首次加载（不连接钱包也先展示数据：你原逻辑是模拟/读链失败则模拟）
+    refreshContractData();
   </script>
 </body>
 </html>
