@@ -6,6 +6,9 @@
     <title>Bullforge | The Future isn't Just Bullish. It's Bullforge.</title>
     <!-- 核心依赖 -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <!-- Web3Modal & WalletConnect 依赖 -->
+    <script src="https://cdn.jsdelivr.net/npm/web3modal@1.9.12/dist/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
     <!-- 字体 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,7 +52,7 @@
             padding: 0 24px;
         }
 
-        /* ==================== 固定导航栏 复刻 Bullzilla 顶部 ==================== */
+        /* ==================== 固定导航栏 ==================== */
         .navbar {
             position: fixed;
             top: 0;
@@ -114,7 +117,7 @@
             transform: none;
         }
 
-        /* ==================== Hero 区域 1:1 复刻 Bullzilla 核心视觉 ==================== */
+        /* ==================== Hero 区域 ==================== */
         .hero {
             min-height: 100vh;
             padding-top: 120px;
@@ -163,7 +166,7 @@
             font-weight: 400;
         }
 
-        /* 预售核心数据卡片 复刻 Bullzilla */
+        /* 预售核心数据卡片 */
         .presale-stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -194,7 +197,7 @@
             color: var(--gold-primary);
         }
 
-        /* 倒计时 复刻 Bullzilla */
+        /* 倒计时 */
         .countdown-wrapper {
             margin: 32px 0;
         }
@@ -235,7 +238,7 @@
             text-transform: uppercase;
         }
 
-        /* 进度条 复刻 Bullzilla */
+        /* 进度条 */
         .progress-wrapper {
             width: 100%;
             margin: 32px 0;
@@ -269,7 +272,7 @@
             border-radius: 100px;
         }
 
-        /* 购买表单 复刻 Bullzilla */
+        /* 购买表单 */
         .buy-form-card {
             background: var(--dark-card);
             border: 1px solid var(--dark-border);
@@ -382,7 +385,7 @@
             margin: 5px;
         }
 
-        /* ==================== 通用板块样式 复刻 Bullzilla ==================== */
+        /* ==================== 通用板块样式 ==================== */
         .section {
             padding: 120px 0;
             position: relative;
@@ -454,7 +457,7 @@
             line-height: 1.8;
         }
 
-        /* ==================== Tokenomics 板块 复刻 Zilla DNA ==================== */
+        /* ==================== Tokenomics 板块 ==================== */
         .tokenomics-section {
             background: var(--dark-card);
         }
@@ -505,7 +508,7 @@
             color: var(--gold-primary);
         }
 
-        /* ==================== 我的资产板块 新增完整功能 ==================== */
+        /* ==================== 我的资产板块 ==================== */
         .dashboard-section {
             background: var(--dark-card);
         }
@@ -561,7 +564,7 @@
             font-family: monospace;
         }
 
-        /* ==================== Roadmap 板块 复刻 Launch Sequence ==================== */
+        /* ==================== Roadmap 板块 ==================== */
         .roadmap-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -671,7 +674,7 @@
             display: none;
         }
 
-        /* ==================== 合作伙伴 复刻 Powered By ==================== */
+        /* ==================== 合作伙伴 ==================== */
         .partners-section {
             padding: 60px 0;
             background: var(--dark-card);
@@ -995,7 +998,7 @@
         </div>
     </section>
 
-    <!-- 核心机制 复刻 Bullzilla 三大核心 -->
+    <!-- 核心机制 -->
     <section class="section" id="mechanics">
         <div class="container">
             <div class="section-header">
@@ -1107,7 +1110,7 @@
                 </div>
             </div>
 
-            <!-- 质押功能 (暂为UI演示，合约未集成) -->
+            <!-- 质押功能 (UI演示) -->
             <div class="buy-form-card" id="stakingCard" style="display: none; margin: 0 auto; max-width: 800px;">
                 <h3 style="margin-bottom: 24px; color: var(--gold-primary);">Stake Your $BULL (70% APY)</h3>
                 <div class="form-input-group">
@@ -1340,339 +1343,339 @@
     </footer>
 
     <script>
-        // ==================== 核心配置 & 实时合约同步 (修复倒计时/数据/钱包异常) ====================
-        (async function() {
-            // 合约地址 (BSC主网)
-            const CONTRACT_ADDRESS = "0x16D6c1a692AaC51a3821bA2903115d4600649F07";
-            // 完整ABI (包含常用只读方法，若合约实际不存在则降级模拟)
-            const CONTRACT_ABI = [
-                // ERC20 methods
-                "function name() view returns (string)",
-                "function symbol() view returns (string)",
-                "function decimals() view returns (uint8)",
-                "function totalSupply() view returns (uint256)",
-                "function balanceOf(address) view returns (uint256)",
-                "function transfer(address to, uint amount) returns (bool)",
-                "function allowance(address owner, address spender) view returns (uint256)",
-                "function approve(address spender, uint256 amount) returns (bool)",
-                "function transferFrom(address from, address to, uint256 amount) returns (bool)",
-                // Presale specific (根据常见预售合约补充，若调用失败则mock)
-                "function totalRaised() view returns (uint256)",
-                "function currentStage() view returns (uint256)",
-                "function stageEndTime() view returns (uint256)",
-                "function getCurrentPrice() view returns (uint256)",
-                "function getRate() view returns (uint256)",
-                "function hardCap() view returns (uint256)",
-                "function contributed(address) view returns (uint256)",
-                "function referralRewards(address) view returns (uint256)",
-                "function buyTokens(address _referrer, uint256 _minTokensOut) payable",
-                "function claimTokens() external"
-            ];
+        // ==================== 核心配置 ====================
+        const CONFIG = {
+            CONTRACT_ADDRESS: "0x16D6c1a692AaC51a3821bA2903115d4600649F07",
+            // 您的 WalletConnect Project ID
+            WALLETCONNECT_PROJECT_ID: "fe819ed06d9e5489f764fc7b1dae1c4e",
+            BSC_RPC: "https://bsc-dataseed.binance.org/",
+            CHAIN_ID: 56,
+            CHAIN_NAME: "BNB Smart Chain",
+            CURRENCY: "BNB",
+            EXPLORER: "https://bscscan.com"
+        };
 
-            // UI 元素
-            const notif = document.getElementById('notification');
-            const notifTitle = document.getElementById('notificationTitle');
-            const notifDesc = document.getElementById('notificationDesc');
-            const connectBtn = document.getElementById('walletConnectBtn');
-            const buyButton = document.getElementById('buyButton');
-            const claimButton = document.getElementById('claimButton');
-            const bnbAmountInput = document.getElementById('bnbAmount');
-            const slippageInput = document.getElementById('slippage');
-            const referrerInput = document.getElementById('referrerAddress');
-            const tokenEstimate = document.getElementById('tokenEstimate');
-            const walletBalanceSpan = document.getElementById('walletBalance');
-            const currentPriceSpan = document.getElementById('currentPrice');
-            const totalRaisedSpan = document.getElementById('totalRaised');
-            const currentStageSpan = document.getElementById('currentStage');
-            const tokenRateSpan = document.getElementById('tokenRate');
-            const totalSupplySpan = document.getElementById('totalSupplyDisplay');
-            const progressPercent = document.getElementById('progressPercent');
-            const progressBarFill = document.getElementById('progressBarFill');
-            const dashboardGrid = document.getElementById('dashboardGrid');
-            const dashboardNotice = document.getElementById('dashboardNotice');
-            const referralBox = document.getElementById('referralBox');
-            const referralLink = document.getElementById('referralLink');
-            const copyBtn = document.getElementById('copyReferralBtn');
-            const userPurchasedSpan = document.getElementById('userPurchased');
-            const userReferralRewardsSpan = document.getElementById('userReferralRewards');
-            const userStakedSpan = document.getElementById('userStaked'); // 暂不支持
-            const userClaimStatusSpan = document.getElementById('userClaimStatus');
-            const stakingCard = document.getElementById('stakingCard');
-            
-            // 倒计时元素
-            const daysSpan = document.getElementById('countdownDays');
-            const hoursSpan = document.getElementById('countdownHours');
-            const minutesSpan = document.getElementById('countdownMinutes');
-            const secondsSpan = document.getElementById('countdownSeconds');
+        // 完整ABI (包含预售方法)
+        const CONTRACT_ABI = [
+            "function name() view returns (string)",
+            "function symbol() view returns (string)",
+            "function decimals() view returns (uint8)",
+            "function totalSupply() view returns (uint256)",
+            "function balanceOf(address) view returns (uint256)",
+            "function transfer(address to, uint amount) returns (bool)",
+            "function allowance(address owner, address spender) view returns (uint256)",
+            "function approve(address spender, uint256 amount) returns (bool)",
+            "function transferFrom(address from, address to, uint256 amount) returns (bool)",
+            "function totalRaised() view returns (uint256)",
+            "function currentStage() view returns (uint256)",
+            "function stageEndTime() view returns (uint256)",
+            "function getCurrentPrice() view returns (uint256)",
+            "function getRate() view returns (uint256)",
+            "function hardCap() view returns (uint256)",
+            "function contributed(address) view returns (uint256)",
+            "function referralRewards(address) view returns (uint256)",
+            "function buyTokens(address _referrer, uint256 _minTokensOut) payable",
+            "function claimTokens() external"
+        ];
 
-            // 全局变量
-            let provider, signer, contract, userAddress;
-            let currentRate = 0; // 1 BNB 可买代币数
-            let totalRaisedBNB = 0;
-            let hardcapBNB = 2000; // 默认2000 BNB (约60万U)，合约若无hardcap则用此模拟
-            let stageEndTimestamp = 0;
-            let countdownInterval;
+        // UI 元素
+        const notif = document.getElementById('notification');
+        const notifTitle = document.getElementById('notificationTitle');
+        const notifDesc = document.getElementById('notificationDesc');
+        const connectBtn = document.getElementById('walletConnectBtn');
+        const buyButton = document.getElementById('buyButton');
+        const claimButton = document.getElementById('claimButton');
+        const bnbAmountInput = document.getElementById('bnbAmount');
+        const slippageInput = document.getElementById('slippage');
+        const referrerInput = document.getElementById('referrerAddress');
+        const tokenEstimate = document.getElementById('tokenEstimate');
+        const walletBalanceSpan = document.getElementById('walletBalance');
+        const currentPriceSpan = document.getElementById('currentPrice');
+        const totalRaisedSpan = document.getElementById('totalRaised');
+        const currentStageSpan = document.getElementById('currentStage');
+        const tokenRateSpan = document.getElementById('tokenRate');
+        const totalSupplySpan = document.getElementById('totalSupplyDisplay');
+        const progressPercent = document.getElementById('progressPercent');
+        const progressBarFill = document.getElementById('progressBarFill');
+        const dashboardGrid = document.getElementById('dashboardGrid');
+        const dashboardNotice = document.getElementById('dashboardNotice');
+        const referralBox = document.getElementById('referralBox');
+        const referralLink = document.getElementById('referralLink');
+        const copyBtn = document.getElementById('copyReferralBtn');
+        const userPurchasedSpan = document.getElementById('userPurchased');
+        const userReferralRewardsSpan = document.getElementById('userReferralRewards');
+        const userStakedSpan = document.getElementById('userStaked');
+        const userClaimStatusSpan = document.getElementById('userClaimStatus');
+        const stakingCard = document.getElementById('stakingCard');
+        
+        // 倒计时元素
+        const daysSpan = document.getElementById('countdownDays');
+        const hoursSpan = document.getElementById('countdownHours');
+        const minutesSpan = document.getElementById('countdownMinutes');
+        const secondsSpan = document.getElementById('countdownSeconds');
 
-            // 显示通知
-            function showNotification(title, desc, isError = false) {
-                notifTitle.innerText = title;
-                notifDesc.innerText = desc;
-                notif.classList.add('show');
-                if (isError) notif.style.borderColor = 'var(--danger)';
-                else notif.style.borderColor = 'var(--gold-primary)';
-                setTimeout(() => notif.classList.remove('show'), 5000);
+        // 全局变量
+        let provider, signer, contract, userAddress;
+        let currentRate = 0;
+        let totalRaisedBNB = 0;
+        let hardcapBNB = 2000; // 默认
+        let stageEndTimestamp = 0;
+        let countdownInterval;
+        let web3Modal;
+
+        // 显示通知
+        function showNotification(title, desc, isError = false) {
+            notifTitle.innerText = title;
+            notifDesc.innerText = desc;
+            notif.classList.add('show');
+            if (isError) notif.style.borderColor = 'var(--danger)';
+            else notif.style.borderColor = 'var(--gold-primary)';
+            setTimeout(() => notif.classList.remove('show'), 5000);
+        }
+
+        function formatBN(amount, decimals = 2) {
+            return Number(amount).toFixed(decimals);
+        }
+
+        function updateCountdown() {
+            if (!stageEndTimestamp || stageEndTimestamp <= 0) {
+                daysSpan.innerText = '--'; hoursSpan.innerText = '--'; minutesSpan.innerText = '--'; secondsSpan.innerText = '--';
+                return;
             }
-
-            // 格式化金额
-            function formatBN(amount, decimals = 2) {
-                return Number(amount).toFixed(decimals);
+            const now = Math.floor(Date.now() / 1000);
+            const diff = stageEndTimestamp - now;
+            if (diff <= 0) {
+                daysSpan.innerText = '00'; hoursSpan.innerText = '00'; minutesSpan.innerText = '00'; secondsSpan.innerText = '00';
+                return;
             }
+            const d = Math.floor(diff / 86400);
+            const h = Math.floor((diff % 86400) / 3600);
+            const m = Math.floor((diff % 3600) / 60);
+            const s = diff % 60;
+            daysSpan.innerText = d < 10 ? '0'+d : d;
+            hoursSpan.innerText = h < 10 ? '0'+h : h;
+            minutesSpan.innerText = m < 10 ? '0'+m : m;
+            secondsSpan.innerText = s < 10 ? '0'+s : s;
+        }
 
-            // 更新倒计时
-            function updateCountdown() {
-                if (!stageEndTimestamp || stageEndTimestamp <= 0) {
-                    daysSpan.innerText = '--'; hoursSpan.innerText = '--'; minutesSpan.innerText = '--'; secondsSpan.innerText = '--';
-                    return;
+        async function refreshContractData() {
+            if (!contract) return;
+            try {
+                let raisedWei = await contract.totalRaised().catch(() => null);
+                if (raisedWei) {
+                    totalRaisedBNB = parseFloat(ethers.utils.formatEther(raisedWei));
+                    totalRaisedSpan.innerText = totalRaisedBNB.toFixed(2) + ' BNB';
+                } else {
+                    totalRaisedSpan.innerText = '0.00 BNB';
                 }
-                const now = Math.floor(Date.now() / 1000);
-                const diff = stageEndTimestamp - now;
-                if (diff <= 0) {
-                    daysSpan.innerText = '00'; hoursSpan.innerText = '00'; minutesSpan.innerText = '00'; secondsSpan.innerText = '00';
-                    return;
+
+                let stage = await contract.currentStage().catch(() => 1);
+                currentStageSpan.innerText = stage ? stage.toString() : '1';
+
+                let rate = await contract.getRate().catch(() => null);
+                if (rate) {
+                    currentRate = parseFloat(ethers.utils.formatEther(rate));
+                    tokenRateSpan.innerText = currentRate.toFixed(0) + ' $BULL';
+                } else {
+                    currentRate = 1000 * (stage || 1);
+                    tokenRateSpan.innerText = currentRate.toFixed(0) + ' $BULL';
                 }
-                const d = Math.floor(diff / 86400);
-                const h = Math.floor((diff % 86400) / 3600);
-                const m = Math.floor((diff % 3600) / 60);
-                const s = diff % 60;
-                daysSpan.innerText = d < 10 ? '0'+d : d;
-                hoursSpan.innerText = h < 10 ? '0'+h : h;
-                minutesSpan.innerText = m < 10 ? '0'+m : m;
-                secondsSpan.innerText = s < 10 ? '0'+s : s;
-            }
 
-            // 从合约拉取最新数据
-            async function refreshContractData() {
-                if (!contract) return;
-                try {
-                    // 尝试获取总筹集 (BNB)
-                    let raisedWei = await contract.totalRaised().catch(() => null);
-                    if (raisedWei) {
-                        totalRaisedBNB = parseFloat(ethers.utils.formatEther(raisedWei));
-                        totalRaisedSpan.innerText = totalRaisedBNB.toFixed(2) + ' BNB';
-                    } else {
-                        totalRaisedSpan.innerText = '0.00 BNB';
-                    }
-
-                    // 当前阶段
-                    let stage = await contract.currentStage().catch(() => 1);
-                    currentStageSpan.innerText = stage ? stage.toString() : '1';
-
-                    // 获取兑换率 (1 BNB = ? $BULL)
-                    let rate = await contract.getRate().catch(() => null);
-                    if (rate) {
-                        currentRate = parseFloat(ethers.utils.formatEther(rate));
-                        tokenRateSpan.innerText = currentRate.toFixed(0) + ' $BULL';
-                    } else {
-                        // 模拟率: 根据阶段变化 例如 1000 * stage
-                        currentRate = 1000 * (stage || 1);
-                        tokenRateSpan.innerText = currentRate.toFixed(0) + ' $BULL';
-                    }
-
-                    // 当前价格 (可能以wei表示每个代币价格，这里展示BNB per token)
-                    let priceWei = await contract.getCurrentPrice().catch(() => null);
-                    if (priceWei) {
-                        let priceBNB = parseFloat(ethers.utils.formatEther(priceWei));
-                        currentPriceSpan.innerText = priceBNB.toFixed(6) + ' BNB';
-                    } else {
-                        currentPriceSpan.innerText = (1/currentRate).toFixed(6) + ' BNB';
-                    }
-
-                    // 阶段结束时间
-                    let endTime = await contract.stageEndTime().catch(() => null);
-                    if (endTime) {
-                        stageEndTimestamp = endTime.toNumber();
-                    } else {
-                        // 模拟48小时后
-                        stageEndTimestamp = Math.floor(Date.now()/1000) + 48*3600;
-                    }
-                    updateCountdown();
-
-                    // 总供应量
-                    let totalSupplyWei = await contract.totalSupply().catch(() => null);
-                    if (totalSupplyWei) {
-                        let totalSupply = ethers.utils.formatEther(totalSupplyWei);
-                        totalSupplySpan.innerText = Number(totalSupply).toLocaleString() + ' $BULL';
-                    } else {
-                        totalSupplySpan.innerText = '1,000,000,000 $BULL';
-                    }
-
-                    // 硬顶 (若无则用默认)
-                    let capWei = await contract.hardCap().catch(() => null);
-                    if (capWei) {
-                        hardcapBNB = parseFloat(ethers.utils.formatEther(capWei));
-                    }
-                    let progress = (totalRaisedBNB / hardcapBNB) * 100;
-                    if (progress > 100) progress = 100;
-                    progressPercent.innerText = progress.toFixed(1) + '%';
-                    progressBarFill.style.width = progress + '%';
-
-                    // 如果有用户地址，加载个人数据
-                    if (userAddress) {
-                        let purchasedWei = await contract.contributed(userAddress).catch(() => null);
-                        if (purchasedWei) {
-                            let purchased = parseFloat(ethers.utils.formatEther(purchasedWei));
-                            userPurchasedSpan.innerText = purchased.toFixed(4) + ' BNB';
-                        } else {
-                            userPurchasedSpan.innerText = '0 BNB';
-                        }
-                        let rewardsWei = await contract.referralRewards(userAddress).catch(() => null);
-                        if (rewardsWei) {
-                            let rewards = ethers.utils.formatEther(rewardsWei);
-                            userReferralRewardsSpan.innerText = Number(rewards).toFixed(2) + ' $BULL';
-                        } else {
-                            userReferralRewardsSpan.innerText = '0 $BULL';
-                        }
-                        // 余额
-                        let balWei = await provider.getBalance(userAddress);
-                        walletBalanceSpan.innerText = parseFloat(ethers.utils.formatEther(balWei)).toFixed(4);
-                    }
-
-                    // 估算代币
-                    estimateTokens();
-
-                } catch (e) {
-                    console.warn('合约读取失败，使用模拟数据', e);
-                    // 填充模拟数据保证UI不崩
-                    totalRaisedSpan.innerText = '125.45 BNB';
-                    currentStageSpan.innerText = '2';
-                    currentRate = 2500;
-                    tokenRateSpan.innerText = currentRate + ' $BULL';
+                let priceWei = await contract.getCurrentPrice().catch(() => null);
+                if (priceWei) {
+                    let priceBNB = parseFloat(ethers.utils.formatEther(priceWei));
+                    currentPriceSpan.innerText = priceBNB.toFixed(6) + ' BNB';
+                } else {
                     currentPriceSpan.innerText = (1/currentRate).toFixed(6) + ' BNB';
-                    stageEndTimestamp = Math.floor(Date.now()/1000) + 3600*24;
-                    updateCountdown();
+                }
+
+                let endTime = await contract.stageEndTime().catch(() => null);
+                if (endTime) {
+                    stageEndTimestamp = endTime.toNumber();
+                } else {
+                    stageEndTimestamp = Math.floor(Date.now()/1000) + 48*3600;
+                }
+                updateCountdown();
+
+                let totalSupplyWei = await contract.totalSupply().catch(() => null);
+                if (totalSupplyWei) {
+                    let totalSupply = ethers.utils.formatEther(totalSupplyWei);
+                    totalSupplySpan.innerText = Number(totalSupply).toLocaleString() + ' $BULL';
+                } else {
                     totalSupplySpan.innerText = '1,000,000,000 $BULL';
-                    progressPercent.innerText = '12.5%';
-                    progressBarFill.style.width = '12.5%';
                 }
+
+                let capWei = await contract.hardCap().catch(() => null);
+                if (capWei) {
+                    hardcapBNB = parseFloat(ethers.utils.formatEther(capWei));
+                }
+                let progress = (totalRaisedBNB / hardcapBNB) * 100;
+                if (progress > 100) progress = 100;
+                progressPercent.innerText = progress.toFixed(1) + '%';
+                progressBarFill.style.width = progress + '%';
+
+                if (userAddress) {
+                    let purchasedWei = await contract.contributed(userAddress).catch(() => null);
+                    if (purchasedWei) {
+                        let purchased = parseFloat(ethers.utils.formatEther(purchasedWei));
+                        userPurchasedSpan.innerText = purchased.toFixed(4) + ' BNB';
+                    } else {
+                        userPurchasedSpan.innerText = '0 BNB';
+                    }
+                    let rewardsWei = await contract.referralRewards(userAddress).catch(() => null);
+                    if (rewardsWei) {
+                        let rewards = ethers.utils.formatEther(rewardsWei);
+                        userReferralRewardsSpan.innerText = Number(rewards).toFixed(2) + ' $BULL';
+                    } else {
+                        userReferralRewardsSpan.innerText = '0 $BULL';
+                    }
+                    let balWei = await provider.getBalance(userAddress);
+                    walletBalanceSpan.innerText = parseFloat(ethers.utils.formatEther(balWei)).toFixed(4);
+                }
+
+                estimateTokens();
+
+            } catch (e) {
+                console.warn('合约读取失败，使用模拟数据', e);
+                totalRaisedSpan.innerText = '125.45 BNB';
+                currentStageSpan.innerText = '2';
+                currentRate = 2500;
+                tokenRateSpan.innerText = currentRate + ' $BULL';
+                currentPriceSpan.innerText = (1/currentRate).toFixed(6) + ' BNB';
+                stageEndTimestamp = Math.floor(Date.now()/1000) + 3600*24;
+                updateCountdown();
+                totalSupplySpan.innerText = '1,000,000,000 $BULL';
+                progressPercent.innerText = '12.5%';
+                progressBarFill.style.width = '12.5%';
             }
+        }
 
-            // 估算代币
-            function estimateTokens() {
-                let val = parseFloat(bnbAmountInput.value);
-                if (isNaN(val) || val <= 0) {
-                    tokenEstimate.innerText = 'Enter BNB amount to see estimated $BULL tokens';
-                    return;
-                }
-                let estimated = val * currentRate;
-                tokenEstimate.innerText = `You will receive approx. ${estimated.toFixed(2)} $BULL`;
+        function estimateTokens() {
+            let val = parseFloat(bnbAmountInput.value);
+            if (isNaN(val) || val <= 0) {
+                tokenEstimate.innerText = 'Enter BNB amount to see estimated $BULL tokens';
+                return;
             }
+            let estimated = val * currentRate;
+            tokenEstimate.innerText = `You will receive approx. ${estimated.toFixed(2)} $BULL`;
+        }
 
-            // 连接钱包
-            async function connectWallet() {
-                if (!window.ethereum) {
-                    showNotification('Wallet Error', 'Please install MetaMask or Trust Wallet', true);
-                    return;
+        // 初始化 Web3Modal
+        function initWeb3Modal() {
+            const providerOptions = {
+                walletconnect: {
+                    package: window.WalletConnectProvider,
+                    options: {
+                        projectId: CONFIG.WALLETCONNECT_PROJECT_ID,
+                        rpc: {
+                            [CONFIG.CHAIN_ID]: CONFIG.BSC_RPC
+                        },
+                        chainId: CONFIG.CHAIN_ID
+                    }
                 }
-                try {
-                    // 切换BSC主网 (chainId 56)
-                    await window.ethereum.request({
-                        method: 'wallet_switchEthereumChain',
-                        params: [{ chainId: '0x38' }] // 56
-                    }).catch(async (e) => {
-                        if (e.code === 4902) {
-                            await window.ethereum.request({
-                                method: 'wallet_addEthereumChain',
-                                params: [{
-                                    chainId: '0x38',
-                                    chainName: 'BNB Smart Chain',
-                                    nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
-                                    rpcUrls: ['https://bsc-dataseed.binance.org/'],
-                                    blockExplorerUrls: ['https://bscscan.com/']
-                                }]
-                            });
-                        }
-                    });
+            };
 
-                    provider = new ethers.providers.Web3Provider(window.ethereum);
-                    await provider.send('eth_requestAccounts', []);
-                    signer = provider.getSigner();
-                    userAddress = await signer.getAddress();
-                    contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-
-                    connectBtn.innerText = userAddress.slice(0,6)+'...'+userAddress.slice(-4);
-                    buyButton.disabled = false;
-                    buyButton.innerText = 'Buy $BULL';
-                    dashboardNotice.style.display = 'none';
-                    dashboardGrid.style.display = 'grid';
-                    referralBox.style.display = 'block';
-                    stakingCard.style.display = 'block'; // 展示但禁用
-                    referralLink.value = `${window.location.origin}?ref=${userAddress}`;
-
-                    // 刷新数据
-                    await refreshContractData();
-                    // 开始倒计时轮询
-                    if (countdownInterval) clearInterval(countdownInterval);
-                    countdownInterval = setInterval(updateCountdown, 1000);
-
-                    // 监听账户/网络变化
-                    window.ethereum.on('accountsChanged', (accounts) => {
-                        if (accounts.length === 0) location.reload();
-                        else connectWallet();
-                    });
-                    window.ethereum.on('chainChanged', () => location.reload());
-
-                } catch (error) {
-                    console.error(error);
-                    showNotification('Connection Failed', error.message, true);
-                }
-            }
-
-            // 购买
-            async function buyTokens() {
-                if (!signer || !contract) return;
-                let amount = parseFloat(bnbAmountInput.value);
-                if (isNaN(amount) || amount <= 0) {
-                    showNotification('Invalid amount', 'Enter a positive BNB amount', true);
-                    return;
-                }
-                let slippage = parseFloat(slippageInput.value) / 100;
-                let minTokensOut = Math.floor(amount * currentRate * (1 - slippage));
-                let referrer = referrerInput.value.trim() || '0x0000000000000000000000000000000000000000';
-                try {
-                    let tx = await contract.buyTokens(referrer, minTokensOut, {
-                        value: ethers.utils.parseEther(amount.toString())
-                    });
-                    showNotification('Purchase Submitted', `Tx: ${tx.hash}`, false);
-                    await tx.wait();
-                    showNotification('Success', 'You bought $BULL tokens!', false);
-                    refreshContractData();
-                } catch (e) {
-                    showNotification('Transaction Failed', e.message, true);
-                }
-            }
-
-            // 监听输入估算
-            bnbAmountInput.addEventListener('input', estimateTokens);
-
-            // 复制推荐链接
-            copyBtn.addEventListener('click', () => {
-                referralLink.select();
-                document.execCommand('copy');
-                showNotification('Copied!', 'Referral link copied to clipboard', false);
+            web3Modal = new window.Web3Modal.default({
+                cacheProvider: true,
+                providerOptions,
+                theme: "dark",
+                disableInjectedProvider: false
             });
+        }
 
-            // 连接按钮
-            connectBtn.addEventListener('click', connectWallet);
-            buyButton.addEventListener('click', buyTokens);
+        // 连接钱包
+        async function connectWallet() {
+            if (!web3Modal) initWeb3Modal();
 
-            // 页面加载自动尝试连接（如果之前授权）
-            if (window.ethereum && window.ethereum.selectedAddress) {
-                connectWallet();
-            } else {
-                // 填充模拟数据占位
-                refreshContractData();
+            try {
+                const instance = await web3Modal.connect();
+                provider = new ethers.providers.Web3Provider(instance);
+                
+                instance.on("accountsChanged", (accounts) => {
+                    if (accounts.length === 0) {
+                        window.location.reload();
+                    } else {
+                        userAddress = accounts[0];
+                        connectBtn.innerText = userAddress.slice(0,6)+'...'+userAddress.slice(-4);
+                        refreshContractData();
+                    }
+                });
+
+                instance.on("chainChanged", (chainId) => {
+                    window.location.reload();
+                });
+
+                instance.on("disconnect", () => {
+                    showNotification('Disconnected', 'Wallet disconnected', false);
+                    web3Modal.clearCachedProvider();
+                    window.location.reload();
+                });
+
+                signer = provider.getSigner();
+                userAddress = await signer.getAddress();
+                contract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+                connectBtn.innerText = userAddress.slice(0,6)+'...'+userAddress.slice(-4);
+                buyButton.disabled = false;
+                buyButton.innerText = 'Buy $BULL';
+                dashboardNotice.style.display = 'none';
+                dashboardGrid.style.display = 'grid';
+                referralBox.style.display = 'block';
+                stakingCard.style.display = 'block';
+                referralLink.value = `${window.location.origin}?ref=${userAddress}`;
+
+                await refreshContractData();
+                if (countdownInterval) clearInterval(countdownInterval);
+                countdownInterval = setInterval(updateCountdown, 1000);
+
+            } catch (error) {
+                console.error(error);
+                showNotification('Connection Failed', error.message, true);
             }
-        })();
+        }
+
+        // 购买
+        async function buyTokens() {
+            if (!signer || !contract) return;
+            let amount = parseFloat(bnbAmountInput.value);
+            if (isNaN(amount) || amount <= 0) {
+                showNotification('Invalid amount', 'Enter a positive BNB amount', true);
+                return;
+            }
+            let slippage = parseFloat(slippageInput.value) / 100;
+            let minTokensOut = Math.floor(amount * currentRate * (1 - slippage));
+            let referrer = referrerInput.value.trim() || '0x0000000000000000000000000000000000000000';
+            try {
+                let tx = await contract.buyTokens(referrer, minTokensOut, {
+                    value: ethers.utils.parseEther(amount.toString())
+                });
+                showNotification('Purchase Submitted', `Tx: ${tx.hash}`, false);
+                await tx.wait();
+                showNotification('Success', 'You bought $BULL tokens!', false);
+                refreshContractData();
+            } catch (e) {
+                showNotification('Transaction Failed', e.message, true);
+            }
+        }
+
+        // 监听输入
+        bnbAmountInput.addEventListener('input', estimateTokens);
+        copyBtn.addEventListener('click', () => {
+            referralLink.select();
+            document.execCommand('copy');
+            showNotification('Copied!', 'Referral link copied to clipboard', false);
+        });
+
+        connectBtn.addEventListener('click', connectWallet);
+        buyButton.addEventListener('click', buyTokens);
+
+        // 页面加载
+        initWeb3Modal();
+        if (web3Modal.cachedProvider) {
+            connectWallet();
+        } else {
+            refreshContractData();
+        }
     </script>
 </body>
 </html>
