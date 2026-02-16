@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bullforge | The Future isn't Just Bullish. It's Bullforge.</title>
-    <!-- 核心依赖 -->
+    <!-- 核心依赖：ethers 必须在最前，因为 Web3Modal 依赖它 -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <!-- Web3Modal & WalletConnect 依赖 -->
     <script src="https://cdn.jsdelivr.net/npm/web3modal@1.9.12/dist/index.js"></script>
@@ -115,6 +115,23 @@
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+        }
+
+        #disconnectBtn {
+            padding: 8px 16px;
+            background: transparent;
+            color: var(--gold-primary);
+            border: 1px solid var(--gold-primary);
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: 12px;
+        }
+
+        #disconnectBtn:hover {
+            background: rgba(255, 215, 0, 0.1);
         }
 
         /* ==================== Hero 区域 ==================== */
@@ -540,6 +557,35 @@
             color: var(--gold-primary);
         }
 
+        /* 交易历史表格 */
+        .history-table {
+            width: 100%;
+            margin-top: 40px;
+            border-collapse: collapse;
+            background: var(--dark-bg);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .history-table th {
+            background: var(--dark-card);
+            color: var(--gold-primary);
+            font-weight: 700;
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--dark-border);
+        }
+
+        .history-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--dark-border);
+            color: var(--text-gray);
+        }
+
+        .history-table tr:last-child td {
+            border-bottom: none;
+        }
+
         .referral-box {
             background: var(--dark-bg);
             border: 1px solid var(--dark-border);
@@ -807,46 +853,36 @@
 
         /* ==================== 响应式适配 ==================== */
         @media (max-width: 768px) {
-            .navbar-links {
+            .navbar-links a:not(#walletConnectBtn):not(#disconnectBtn) {
                 display: none;
             }
-
             .hero-title {
                 font-size: 40px;
             }
-
             .hero-slogan {
                 font-size: 18px;
             }
-
             .presale-stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
-
             .countdown-grid {
                 gap: 8px;
             }
-
             .countdown-box {
                 min-width: 70px;
             }
-
             .countdown-number {
                 font-size: 28px;
             }
-
             .section-title {
                 font-size: 36px;
             }
-
             .feature-grid, .tokenomics-grid, .roadmap-grid, .dashboard-grid {
                 grid-template-columns: 1fr;
             }
-
             .referral-link {
                 flex-direction: column;
             }
-
             .notification {
                 right: 12px;
                 left: 12px;
@@ -874,6 +910,7 @@
                 <a href="#roadmap">Roadmap</a>
                 <a href="#faq">FAQ</a>
                 <button id="walletConnectBtn">Connect Wallet</button>
+                <button id="disconnectBtn" style="display: none;">Disconnect</button>
             </div>
         </div>
     </nav>
@@ -1093,11 +1130,11 @@
 
             <div class="dashboard-grid" id="dashboardGrid" style="display: none;">
                 <div class="dashboard-card">
-                    <div class="dashboard-label">Purchased $BULL</div>
+                    <div class="dashboard-label">Purchased (BNB)</div>
                     <div class="dashboard-value" id="userPurchased">0</div>
                 </div>
                 <div class="dashboard-card">
-                    <div class="dashboard-label">Referral Rewards</div>
+                    <div class="dashboard-label">Referral Rewards ($BULL)</div>
                     <div class="dashboard-value" id="userReferralRewards">0</div>
                 </div>
                 <div class="dashboard-card">
@@ -1109,6 +1146,22 @@
                     <div class="dashboard-value" id="userClaimStatus">--</div>
                 </div>
             </div>
+
+            <!-- 新增：持仓价值与交易历史卡片 -->
+            <div class="dashboard-card" id="portfolioCard" style="display: none; margin-bottom: 24px;">
+                <div class="dashboard-label">💰 持仓价值</div>
+                <div class="dashboard-value" id="portfolioValue">0 BNB</div>
+                <div style="margin-top: 16px; font-size: 14px; color: var(--text-gray);" id="tokenBalanceDetail">持有 $BULL: 0</div>
+            </div>
+
+            <table class="history-table" id="historyTable" style="display: none;">
+                <thead>
+                    <tr><th>时间</th><th>金额 (BNB)</th><th>获得 $BULL</th><th>价格 (BNB/$BULL)</th></tr>
+                </thead>
+                <tbody id="historyBody">
+                    <tr><td colspan="4" style="text-align:center;">加载中...</td></tr>
+                </tbody>
+            </table>
 
             <!-- 质押功能 (UI演示) -->
             <div class="buy-form-card" id="stakingCard" style="display: none; margin: 0 auto; max-width: 800px;">
@@ -1346,7 +1399,6 @@
         // ==================== 核心配置 ====================
         const CONFIG = {
             CONTRACT_ADDRESS: "0x16D6c1a692AaC51a3821bA2903115d4600649F07",
-            // 您的 WalletConnect Project ID
             WALLETCONNECT_PROJECT_ID: "fe819ed06d9e5489f764fc7b1dae1c4e",
             BSC_RPC: "https://bsc-dataseed.binance.org/",
             CHAIN_ID: 56,
@@ -1355,7 +1407,7 @@
             EXPLORER: "https://bscscan.com"
         };
 
-        // 完整ABI (包含预售方法)
+        // 完整ABI (包含预售方法和 Buy 事件)
         const CONTRACT_ABI = [
             "function name() view returns (string)",
             "function symbol() view returns (string)",
@@ -1375,7 +1427,9 @@
             "function contributed(address) view returns (uint256)",
             "function referralRewards(address) view returns (uint256)",
             "function buyTokens(address _referrer, uint256 _minTokensOut) payable",
-            "function claimTokens() external"
+            "function claimTokens() external",
+            // 事件定义
+            "event Buy(address indexed buyer, uint256 bnbAmount, uint256 tokenAmount, uint256 price, address indexed referrer)"
         ];
 
         // UI 元素
@@ -1383,6 +1437,7 @@
         const notifTitle = document.getElementById('notificationTitle');
         const notifDesc = document.getElementById('notificationDesc');
         const connectBtn = document.getElementById('walletConnectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
         const buyButton = document.getElementById('buyButton');
         const claimButton = document.getElementById('claimButton');
         const bnbAmountInput = document.getElementById('bnbAmount');
@@ -1407,6 +1462,11 @@
         const userStakedSpan = document.getElementById('userStaked');
         const userClaimStatusSpan = document.getElementById('userClaimStatus');
         const stakingCard = document.getElementById('stakingCard');
+        const portfolioCard = document.getElementById('portfolioCard');
+        const portfolioValue = document.getElementById('portfolioValue');
+        const tokenBalanceDetail = document.getElementById('tokenBalanceDetail');
+        const historyTable = document.getElementById('historyTable');
+        const historyBody = document.getElementById('historyBody');
         
         // 倒计时元素
         const daysSpan = document.getElementById('countdownDays');
@@ -1418,7 +1478,7 @@
         let provider, signer, contract, userAddress;
         let currentRate = 0;
         let totalRaisedBNB = 0;
-        let hardcapBNB = 2000; // 默认
+        let hardcapBNB = 2000;
         let stageEndTimestamp = 0;
         let countdownInterval;
         let web3Modal;
@@ -1456,6 +1516,37 @@
             hoursSpan.innerText = h < 10 ? '0'+h : h;
             minutesSpan.innerText = m < 10 ? '0'+m : m;
             secondsSpan.innerText = s < 10 ? '0'+s : s;
+        }
+
+        // 加载用户交易历史
+        async function loadUserHistory() {
+            if (!contract || !userAddress) return;
+            try {
+                // 查询 Buy 事件
+                const filter = contract.filters.Buy(userAddress);
+                const events = await contract.queryFilter(filter, -10000); // 从近10000个区块开始，可调整
+                events.sort((a,b) => b.blockNumber - a.blockNumber); // 最新的在前
+                const history = events.slice(0, 5); // 最近5条
+
+                if (history.length === 0) {
+                    historyBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">暂无购买记录</td></tr>';
+                } else {
+                    historyBody.innerHTML = '';
+                    for (let ev of history) {
+                        const block = await ev.getBlock();
+                        const date = new Date(block.timestamp * 1000).toLocaleString();
+                        const bnbAmount = ethers.utils.formatEther(ev.args.bnbAmount);
+                        const tokenAmount = ethers.utils.formatEther(ev.args.tokenAmount);
+                        const price = ethers.utils.formatEther(ev.args.price);
+                        historyBody.innerHTML += `<tr><td>${date}</td><td>${bnbAmount}</td><td>${Number(tokenAmount).toFixed(2)}</td><td>${price}</td></tr>`;
+                    }
+                }
+                historyTable.style.display = 'table';
+            } catch (e) {
+                console.warn('获取历史失败', e);
+                historyBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">无法获取历史记录（可能合约无事件）</td></tr>';
+                historyTable.style.display = 'table';
+            }
         }
 
         async function refreshContractData() {
@@ -1531,6 +1622,20 @@
                     }
                     let balWei = await provider.getBalance(userAddress);
                     walletBalanceSpan.innerText = parseFloat(ethers.utils.formatEther(balWei)).toFixed(4);
+
+                    // 获取代币余额（如果已 claim）
+                    let tokenBalanceWei = await contract.balanceOf(userAddress).catch(() => ethers.BigNumber.from(0));
+                    let tokenBalance = parseFloat(ethers.utils.formatEther(tokenBalanceWei));
+                    tokenBalanceDetail.innerText = `持有 $BULL: ${tokenBalance.toFixed(2)}`;
+
+                    // 计算持仓价值 (代币数量 * 当前价格)
+                    let pricePerToken = 1 / currentRate; // BNB per token
+                    let portfolioValueBNB = tokenBalance * pricePerToken;
+                    portfolioValue.innerText = `${portfolioValueBNB.toFixed(4)} BNB`;
+                    portfolioCard.style.display = 'block';
+
+                    // 加载交易历史
+                    loadUserHistory();
                 }
 
                 estimateTokens();
@@ -1597,6 +1702,7 @@
                     } else {
                         userAddress = accounts[0];
                         connectBtn.innerText = userAddress.slice(0,6)+'...'+userAddress.slice(-4);
+                        disconnectBtn.style.display = 'inline-block';
                         refreshContractData();
                     }
                 });
@@ -1616,8 +1722,10 @@
                 contract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
                 connectBtn.innerText = userAddress.slice(0,6)+'...'+userAddress.slice(-4);
+                disconnectBtn.style.display = 'inline-block';
                 buyButton.disabled = false;
                 buyButton.innerText = 'Buy $BULL';
+                claimButton.style.display = 'block'; // 显示 claim 按钮
                 dashboardNotice.style.display = 'none';
                 dashboardGrid.style.display = 'grid';
                 referralBox.style.display = 'block';
@@ -1631,6 +1739,14 @@
             } catch (error) {
                 console.error(error);
                 showNotification('Connection Failed', error.message, true);
+            }
+        }
+
+        // 断开钱包
+        async function disconnectWallet() {
+            if (web3Modal) {
+                web3Modal.clearCachedProvider();
+                window.location.reload();
             }
         }
 
@@ -1658,6 +1774,20 @@
             }
         }
 
+        // Claim 代币
+        async function claimTokens() {
+            if (!signer || !contract) return;
+            try {
+                let tx = await contract.claimTokens();
+                showNotification('Claim Submitted', `Tx: ${tx.hash}`, false);
+                await tx.wait();
+                showNotification('Success', 'Tokens claimed!', false);
+                refreshContractData();
+            } catch (e) {
+                showNotification('Claim Failed', e.message, true);
+            }
+        }
+
         // 监听输入
         bnbAmountInput.addEventListener('input', estimateTokens);
         copyBtn.addEventListener('click', () => {
@@ -1667,7 +1797,9 @@
         });
 
         connectBtn.addEventListener('click', connectWallet);
+        disconnectBtn.addEventListener('click', disconnectWallet);
         buyButton.addEventListener('click', buyTokens);
+        claimButton.addEventListener('click', claimTokens);
 
         // 页面加载
         initWeb3Modal();
